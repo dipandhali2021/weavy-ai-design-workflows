@@ -158,17 +158,19 @@ const HeroSection = () => {
 
   return (
     <section
-      className="relative w-full min-h-screen h-screen bg-[#e8e8e3] overflow-visible z-50"
-      style={{
-        backgroundImage: `
-          url(https://cdn.prod.website-files.com/681b040781d5b5e278a69989/681ccdbeb607e939f7db68fa_BG%20NET%20Hero.avif),
-          linear-gradient(to right, rgba(0,0,0,0.02) 1px, transparent 1px),
-          linear-gradient(to bottom, rgba(0,0,0,0.02) 1px, transparent 1px)
-        `,
-        backgroundSize: 'cover, 10px 10px, 10px 10px',
-        backgroundPosition: 'center top, 0 0, 0 0',
-        backgroundRepeat: 'no-repeat, repeat, repeat',
-      }}
+     className="relative w-full min-h-screen h-screen bg-[#bed3e2] overflow-visible z-50"
+style={{
+  backgroundImage: `
+    linear-gradient(to bottom, transparent 50%, #ffffff 100%),
+    linear-gradient(rgba(232, 232, 227, 0.7), rgba(232, 232, 227, 0.2)),
+    url(https://cdn.prod.website-files.com/681b040781d5b5e278a69989/681ccdbeb607e939f7db68fa_BG%20NET%20Hero.avif),
+    linear-gradient(to right, rgba(0,0,0,0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0,0,0,0.02) 1px, transparent 1px)
+  `,
+  backgroundSize: '100% 100%, cover, cover, 10px 10px, 10px 10px',
+  backgroundPosition: 'center bottom, center center, center top, 0 0, 0 0',
+  backgroundRepeat: 'no-repeat, no-repeat, no-repeat, repeat, repeat',
+}}
     >
       {/* Hero Text Content (Overlay) */}
       <div className="absolute top-[150px] left-[65px] z-10 pointer-events-none select-none">

@@ -33,7 +33,7 @@ const Navbar = () => {
       </section>
 
       {/* Main Navigation */}
-      <div className="flex justify-between w-full h-[80px] border-b border-black/5">
+      <div className="flex justify-between w-full h-[80px]  border-black/5">
         {/* Logo */}
         <div className="pl-0 invert">
           <a href="/">
