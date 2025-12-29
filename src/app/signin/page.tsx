@@ -1,13 +1,16 @@
 'use client';
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
+import { useRouter } from 'next/navigation';
 import { FcGoogle } from 'react-icons/fc';
 
 const SignInPage = () => {
+  const router = useRouter();
+
   const handleGoogleSignIn = () => {
     // Add Google sign-in logic here
     console.log('Google sign-in clicked');
+    router.push('/dashboard');
   };
 
   return (
