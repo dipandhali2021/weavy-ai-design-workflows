@@ -391,10 +391,62 @@ function BuilderInner() {
   const addNode = useWorkflowStore((s) => s.addNode);
   const deleteSelectedNodes = useWorkflowStore((s) => s.deleteSelectedNodes);
   const workflowName = useWorkflowStore((s) => s.workflowName);
+  const setWorkflowName = useWorkflowStore((s) => s.setWorkflowName);
 
   const [leftPanelOpen, setLeftPanelOpen] = React.useState(true);
   const [taskManagerOpen, setTaskManagerOpen] = React.useState(false);
   const [toolMode, setToolMode] = React.useState<'select' | 'pan'>('select');
+  
+  // Editable workflow name state
+  const [isEditingName, setIsEditingName] = React.useState(false);
+  const [editedName, setEditedName] = React.useState(workflowName);
+  const nameInputRef = React.useRef<HTMLInputElement>(null);
+
+  // Search state
+  const [searchQuery, setSearchQuery] = React.useState('');
+
+  // Node types for filtering
+  const nodeTypes = [
+    { title: 'Text', nodeType: 'text' as const, icon: <Type className="h-6 w-6" /> },
+    { title: 'Image', nodeType: 'image' as const, icon: <ImageIcon className="h-6 w-6" /> },
+    { title: 'Run Any LLM', nodeType: 'llm' as const, icon: <Sparkles className="h-6 w-6" /> },
+  ];
+
+  // Filter nodes based on search query
+  const filteredNodeTypes = nodeTypes.filter((node) =>
+    node.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Sync browser tab title with workflow name
+  React.useEffect(() => {
+    document.title = workflowName || 'untitled';
+  }, [workflowName]);
+
+  // Focus input when editing starts
+  React.useEffect(() => {
+    if (isEditingName && nameInputRef.current) {
+      nameInputRef.current.focus();
+      nameInputRef.current.select();
+    }
+  }, [isEditingName]);
+
+  const handleNameSubmit = () => {
+    if (editedName.trim()) {
+      setWorkflowName(editedName.trim());
+    } else {
+      setEditedName(workflowName); // Reset to current name if empty
+    }
+    setIsEditingName(false);
+  };
+
+  const handleNameKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleNameSubmit();
+    } else if (e.key === 'Escape') {
+      setEditedName(workflowName);
+      setIsEditingName(false);
+    }
+  };
 
   // Add node at center of viewport
   const handleAddNode = React.useCallback(
@@ -619,6 +671,38 @@ function BuilderInner() {
             </div>
           </Panel>
 
+          {/* Workflow name - visible when sidebar is closed */}
+          {!leftPanelOpen && (
+            <div
+              className="pointer-events-auto absolute z-20"
+              style={{ left: 72, top: 12 }}
+            >
+              {isEditingName ? (
+                <input
+                  autoFocus
+                  type="text"
+                  value={editedName}
+                  onChange={(e) => setEditedName(e.target.value)}
+                  onBlur={handleNameSubmit}
+                  onKeyDown={handleNameKeyDown}
+                  className="text-[18px] font-medium text-foreground bg-muted/60 rounded-md px-4 py-2 outline-none border border-purple-500 min-w-[200px]"
+                />
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditedName(workflowName);
+                    setIsEditingName(true);
+                  }}
+                  className="text-[18px] z-20 font-medium text-foreground hover:text-foreground/80 truncate text-left transition-colors bg-muted/60 rounded-md px-4 py-2 border border-border min-w-[200px]"
+                  title="Click to rename"
+                >
+                  {workflowName}
+                </button>
+              )}
+            </div>
+          )}
+
           {/* Left slide-out panel */}
           <Panel
             position="top-left"
@@ -637,11 +721,31 @@ function BuilderInner() {
             }}
           >
             <div className="flex h-full w-full flex-col border-r border-border bg-card">
-              {/* Workflow title */}
+              {/* Editable Workflow title */}
               <div className="flex items-center border-b border-border px-4 py-4">
-                <div className="text-[20px] font-medium text-foreground truncate">
-                  {workflowName}
-                </div>
+                {isEditingName ? (
+                  <input
+                    ref={nameInputRef}
+                    type="text"
+                    value={editedName}
+                    onChange={(e) => setEditedName(e.target.value)}
+                    onBlur={handleNameSubmit}
+                    onKeyDown={handleNameKeyDown}
+                    className="w-full text-[18px] font-medium text-foreground bg-muted/40 rounded-md px-4 py-2 outline-none border border-border"
+                  />
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditedName(workflowName);
+                      setIsEditingName(true);
+                    }}
+                    className="text-[18px] font-medium text-foreground hover:text-foreground/80 truncate text-left transition-colors"
+                    title="Click to rename"
+                  >
+                    {workflowName}
+                  </button>
+                )}
               </div>
 
               {/* Search */}
@@ -649,37 +753,45 @@ function BuilderInner() {
                 <div className="flex h-10 items-center gap-2 rounded-lg border border-border bg-background px-3">
                   <ToolbarIconSearch />
                   <input
-                    placeholder="Search nodes..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search"
                     className="h-full w-full bg-transparent text-sm outline-none placeholder:text-foreground/50"
                   />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchQuery('')}
+                      className="text-foreground/50 hover:text-foreground"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
                 </div>
               </div>
 
               {/* Quick Access - Node Buttons */}
               <div className="flex-1 overflow-y-auto px-4 py-4">
                 <div className="text-[15px] font-medium text-foreground mb-3">
-                  Quick access
+                  {searchQuery ? 'Search Results' : 'Quick access'}
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <QuickAccessNodeButton
-                    title="Text"
-                    icon={<Type className="h-6 w-6" />}
-                    nodeType="text"
-                    onAdd={handleAddNode}
-                  />
-                  <QuickAccessNodeButton
-                    title="Image"
-                    icon={<ImageIcon className="h-6 w-6" />}
-                    nodeType="image"
-                    onAdd={handleAddNode}
-                  />
-                  <QuickAccessNodeButton
-                    title="Run Any LLM"
-                    icon={<Sparkles className="h-6 w-6" />}
-                    nodeType="llm"
-                    onAdd={handleAddNode}
-                  />
-                </div>
+                {filteredNodeTypes.length > 0 ? (
+                  <div className="grid grid-cols-2 gap-3">
+                    {filteredNodeTypes.map((node) => (
+                      <QuickAccessNodeButton
+                        key={node.nodeType}
+                        title={node.title}
+                        icon={node.icon}
+                        nodeType={node.nodeType}
+                        onAdd={handleAddNode}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-sm text-foreground/50 py-4">
+                    No nodes found for "{searchQuery}"
+                  </div>
+                )}
 
                 <div className="mt-6 text-xs text-foreground/50">
                   Drag nodes to the canvas or click to add at center
