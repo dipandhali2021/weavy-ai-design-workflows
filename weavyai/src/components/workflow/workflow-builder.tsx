@@ -11,6 +11,7 @@ import {
   useReactFlow,
   useOnViewportChange,
   type NodeTypes,
+  type EdgeTypes,
   type Viewport,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
@@ -41,6 +42,7 @@ import {
   Loader2,
   MousePointer2,
   Redo2,
+  Save,
   Sparkles,
   Type,
   Undo2,
@@ -49,6 +51,7 @@ import {
   ZoomOut,
 } from 'lucide-react';
 import { workflowNodeTypes, TextNode, ImageNode, LLMNode } from './nodes';
+import { customEdgeTypes } from './custom-edges';
 import { useWorkflowStore, selectCanUndo, selectCanRedo } from '@/stores/workflowStore';
 import { simpleTestWorkflow, productListingWorkflow } from '@/lib/sampleWorkflows';
 import type { WorkflowNode, WorkflowEdge, RunTask } from '@/types/workflow.types';
@@ -79,7 +82,7 @@ function QuickAccessNodeButton({
         e.dataTransfer.effectAllowed = 'move';
       }}
       className={cn(
-        'flex h-24 flex-col items-center justify-center gap-2 rounded-lg border border-border/60',
+        'flex h-24 flex-col items-center justify-center gap-2 rounded-md border border-border/60',
         'bg-card/40 text-foreground/90 hover:bg-purple-500/10 hover:border-purple-500/50',
         'transition-all cursor-grab active:cursor-grabbing'
       )}
@@ -120,7 +123,7 @@ function TaskManagerPanel({ onClose }: { onClose: () => void }) {
   });
 
   return (
-    <div className="w-[340px] rounded-lg border border-border/60 bg-card/95 backdrop-blur shadow-lg">
+    <div className="w-[340px] rounded-md border border-border/60 bg-card/95 backdrop-blur shadow-lg">
       <div className="flex items-center justify-between p-3">
         <div className="text-[16px] font-medium text-foreground">
           Task manager
@@ -271,14 +274,14 @@ function BottomToolbar({ toolMode, setToolMode }: BottomToolbarProps) {
 
   return (
     <div className="pointer-events-none absolute bottom-6 left-1/2 -translate-x-1/2">
-      <div className="pointer-events-auto flex items-center gap-1 rounded-lg border border-border/60 bg-card/80 backdrop-blur px-2 py-2 shadow-lg">
+      <div className="pointer-events-auto flex items-center gap-1 rounded-md border border-border/60 bg-card/80 backdrop-blur px-2 py-2 shadow-lg">
         {/* Select tool */}
         <button
           type="button"
           aria-label="Select"
           onClick={() => setToolMode('select')}
           className={cn(
-            'grid h-9 w-9 place-items-center rounded-lg transition-colors',
+            'grid h-9 w-9 place-items-center rounded-md transition-colors',
             toolMode === 'select' 
               ? 'bg-[#E8FF5A] text-black' 
               : 'text-foreground/80 hover:bg-muted/40'
@@ -293,7 +296,7 @@ function BottomToolbar({ toolMode, setToolMode }: BottomToolbarProps) {
           aria-label="Pan"
           onClick={() => setToolMode('pan')}
           className={cn(
-            'grid h-9 w-9 place-items-center rounded-lg transition-colors',
+            'grid h-9 w-9 place-items-center rounded-md transition-colors',
             toolMode === 'pan' 
               ? 'bg-[#E8FF5A] text-black' 
               : 'text-foreground/80 hover:bg-muted/40'
@@ -311,7 +314,7 @@ function BottomToolbar({ toolMode, setToolMode }: BottomToolbarProps) {
           disabled={!canUndo}
           onClick={undo}
           className={cn(
-            'grid h-9 w-9 place-items-center rounded-lg hover:bg-muted/40',
+            'grid h-9 w-9 place-items-center rounded-md hover:bg-muted/40',
             canUndo ? 'text-foreground/80' : 'text-foreground/30 cursor-not-allowed'
           )}
         >
@@ -325,7 +328,7 @@ function BottomToolbar({ toolMode, setToolMode }: BottomToolbarProps) {
           disabled={!canRedo}
           onClick={redo}
           className={cn(
-            'grid h-9 w-9 place-items-center rounded-lg hover:bg-muted/40',
+            'grid h-9 w-9 place-items-center rounded-md hover:bg-muted/40',
             canRedo ? 'text-foreground/80' : 'text-foreground/30 cursor-not-allowed'
           )}
         >
@@ -339,7 +342,7 @@ function BottomToolbar({ toolMode, setToolMode }: BottomToolbarProps) {
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              className="flex items-center gap-1 h-9 rounded-lg px-3 text-[13px] font-medium text-foreground/80 hover:bg-muted/40"
+              className="flex items-center gap-1 h-9 rounded-md px-3 text-[13px] font-medium text-foreground/80 hover:bg-muted/40"
             >
               {zoomPct}%
               <ChevronDown className="h-3 w-3 ml-1" />
@@ -395,6 +398,7 @@ function BuilderInner() {
   const setWorkflowName = useWorkflowStore((s) => s.setWorkflowName);
   const isSaving = useWorkflowStore((s) => s.isSaving);
   const isDirty = useWorkflowStore((s) => s.isDirty);
+  const saveWorkflow = useWorkflowStore((s) => s.saveWorkflow);
 
   const [leftPanelOpen, setLeftPanelOpen] = React.useState(true);
   const [taskManagerOpen, setTaskManagerOpen] = React.useState(false);
@@ -517,10 +521,11 @@ function BuilderInner() {
   // Keyboard shortcuts
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Delete/Backspace to delete selected nodes
+      // Delete/Backspace to delete selected nodes and edges
       if ((e.key === 'Delete' || e.key === 'Backspace') && !['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement).tagName)) {
         e.preventDefault();
         deleteSelectedNodes();
+        useWorkflowStore.getState().deleteSelectedEdges();
       }
 
       // Ctrl+Z for undo
@@ -533,6 +538,12 @@ function BuilderInner() {
       if (((e.ctrlKey || e.metaKey) && e.key === 'z' && e.shiftKey) || ((e.ctrlKey || e.metaKey) && e.key === 'y')) {
         e.preventDefault();
         useWorkflowStore.getState().redo();
+      }
+
+      // Ctrl+S for instant save
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        useWorkflowStore.getState().saveWorkflow();
       }
     };
 
@@ -566,11 +577,12 @@ function BuilderInner() {
           elementsSelectable={toolMode === 'select'}
           selectionOnDrag={toolMode === 'select'}
           proOptions={{ hideAttribution: true }}
+          edgeTypes={customEdgeTypes as EdgeTypes}
           defaultEdgeOptions={{
-            animated: true,
-            style: { stroke: '#8B5CF6', strokeWidth: 2 },
+            type: 'custom',
+            style: { stroke: '#D946EF', strokeWidth: 2 },
           }}
-          connectionLineStyle={{ stroke: '#8B5CF6', strokeWidth: 2 }}
+          connectionLineStyle={{ stroke: '#D946EF', strokeWidth: 2 }}
         >
           {/* Task manager panel */}
           {taskManagerOpen && (
@@ -589,7 +601,7 @@ function BuilderInner() {
             className="pointer-events-auto"
             style={{ margin: 24 }}
           >
-            <div className="w-[260px] rounded-lg border border-border/60 bg-card/80 backdrop-blur p-3 shadow-lg">
+            <div className="w-[260px] rounded-md border border-border/60 bg-card/80 backdrop-blur p-3 shadow-lg">
               <div className="flex items-center justify-between">
                 <div className="text-[14px] flex items-center gap-1 font-medium text-foreground">
                   <TbAsterisk className="text-[16px]" />
@@ -604,24 +616,42 @@ function BuilderInner() {
                 </Button>
               </div>
 
-              {/* Save status indicator */}
-              <div className="mt-2 flex items-center gap-2 text-sm">
-                {isSaving ? (
-                  <span className="flex items-center gap-1 text-foreground/60">
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                    Saving...
-                  </span>
-                ) : !isDirty ? (
-                  <span className="flex items-center gap-1 text-green-500/80">
-                    <Check className="h-3 w-3" />
-                    Saved
-                  </span>
-                ) : (
-                  <span className="flex items-center gap-1 text-foreground/50">
-                    <span className="h-2 w-2 rounded-full bg-yellow-500" />
-                    Unsaved
-                  </span>
-                )}
+              {/* Save status indicator with Save button */}
+              <div className="mt-2 flex items-center justify-between">
+                <div className="flex items-center gap-2 text-sm">
+                  {isSaving ? (
+                    <span className="flex items-center gap-1 text-foreground/60">
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                      Saving...
+                    </span>
+                  ) : !isDirty ? (
+                    <span className="flex items-center gap-1 text-green-500/80">
+                      <Check className="h-3 w-3" />
+                      Saved
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1 text-foreground/50">
+                      <span className="h-2 w-2 rounded-full bg-yellow-500" />
+                      Unsaved
+                    </span>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={saveWorkflow}
+                  disabled={isSaving || !isDirty}
+                  className={cn(
+                    "flex items-center gap-1 text-xs px-2 py-1 rounded-md transition-colors",
+                    isDirty && !isSaving
+                      ? "bg-purple-500/20 text-purple-300 hover:bg-purple-500/30"
+                      : "text-foreground/40 cursor-not-allowed"
+                  )}
+                  title="Ctrl+S"
+                >
+                  <Save className="h-3 w-3" />
+                  <span>Save</span>
+                  <span className="text-[10px] text-foreground/40 ml-1">⌘S</span>
+                </button>
               </div>
 
               <div className="mt-2">
@@ -785,7 +815,7 @@ function BuilderInner() {
 
               {/* Search */}
               <div className="border-b border-border px-4 py-3">
-                <div className="flex h-10 items-center gap-2 rounded-lg border border-border bg-background px-3">
+                <div className="flex h-10 items-center gap-2 rounded-md border border-border bg-background px-3">
                   <ToolbarIconSearch />
                   <input
                     value={searchQuery}

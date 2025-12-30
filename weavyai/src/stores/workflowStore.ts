@@ -55,6 +55,7 @@ interface WorkflowState {
     updateNodeData: <T extends WorkflowNode>(nodeId: string, data: Partial<T['data']>) => void;
     deleteNode: (nodeId: string) => void;
     deleteSelectedNodes: () => void;
+    deleteSelectedEdges: () => void;
     duplicateNode: (nodeId: string) => string | null;
 
     // Actions - Task tracking
@@ -190,8 +191,8 @@ export const useWorkflowStore = create<WorkflowState>()(
                 target: connection.target!,
                 sourceHandle: connection.sourceHandle ?? undefined,
                 targetHandle: connection.targetHandle ?? undefined,
-                animated: true,
-                style: { stroke: '#8B5CF6', strokeWidth: 2 },
+                type: 'custom',
+                style: { stroke: '#E879F9', strokeWidth: 2 },
             };
 
             set({
@@ -282,6 +283,20 @@ export const useWorkflowStore = create<WorkflowState>()(
                 edges: state.edges.filter(
                     (e) => !selectedNodeIds.includes(e.source) && !selectedNodeIds.includes(e.target)
                 ),
+                isDirty: true,
+            });
+        },
+
+        deleteSelectedEdges: () => {
+            const state = get();
+            const selectedEdges = state.edges.filter((e) => e.selected);
+
+            if (selectedEdges.length === 0) return;
+
+            state.pushToHistory();
+
+            set({
+                edges: state.edges.filter((e) => !e.selected),
                 isDirty: true,
             });
         },

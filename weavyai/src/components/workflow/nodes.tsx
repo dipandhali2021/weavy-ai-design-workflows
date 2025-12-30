@@ -102,16 +102,26 @@ function HandleLabel({
   label,
   position,
   className,
+  color = 'magenta',
 }: {
   label: string;
   position: 'left' | 'right';
   className?: string;
+  color?: 'magenta' | 'green' | 'cyan';
 }) {
+  const colorClasses = {
+    magenta: 'text-pink-400',
+    green: 'text-emerald-400',
+    cyan: 'text-cyan-400',
+  };
+
   return (
     <div
       className={cn(
-        'absolute text-[10px] text-foreground/60 whitespace-nowrap',
-        position === 'left' ? 'left-3' : 'right-3',
+        'absolute text-[11px] font-medium whitespace-nowrap pointer-events-none',
+        'opacity-0 group-hover/node:opacity-100 transition-opacity duration-150',
+        colorClasses[color],
+        position === 'left' ? 'right-full mr-2' : 'left-full ml-2',
         className
       )}
     >
@@ -120,12 +130,70 @@ function HandleLabel({
   );
 }
 
-const handleStyle = {
-  width: 12,
-  height: 12,
-  border: '2px solid hsl(var(--background))',
-  backgroundColor: '#8B5CF6',
+// Handle colors
+const handleColors = {
+  magenta: '#E879F9',
+  green: '#10B981',
+  cyan: '#22D3EE',
 };
+
+// Get handle style based on color and connection state
+const getHandleStyle = (color: 'magenta' | 'green' | 'cyan', isConnected: boolean): React.CSSProperties => {
+  const colorValue = handleColors[color];
+  return {
+    width: 18,
+    height: 18,
+    border: `3px solid ${colorValue}`,
+    backgroundColor: isConnected ? colorValue : 'transparent',
+    boxShadow: isConnected 
+      ? `inset 0 0 0 3px hsl(var(--background))` 
+      : 'none',
+  };
+};
+
+// Handle wrapper component for consistent styling with connection detection
+function HandleWithLabel({
+  type,
+  position,
+  id,
+  nodeId,
+  label,
+  color = 'magenta',
+  style,
+}: {
+  type: 'source' | 'target';
+  position: Position;
+  id: string;
+  nodeId: string;
+  label: string;
+  color?: 'magenta' | 'green' | 'cyan';
+  style?: React.CSSProperties;
+}) {
+  // Check if this handle is connected
+  const edges = useWorkflowStore((s) => s.edges);
+  const isConnected = edges.some((edge) => {
+    if (type === 'source') {
+      return edge.source === nodeId && edge.sourceHandle === id;
+    }
+    return edge.target === nodeId && edge.targetHandle === id;
+  });
+
+  return (
+    <div className="relative">
+      <Handle
+        type={type}
+        position={position}
+        id={id}
+        style={{ ...getHandleStyle(color, isConnected), ...style }}
+      />
+      <HandleLabel 
+        label={label} 
+        position={position === Position.Left ? 'left' : 'right'}
+        color={color}
+      />
+    </div>
+  );
+}
 
 // ============================================================================
 // Text Node
@@ -154,22 +222,30 @@ export function TextNode({ id, data, selected }: NodeProps<TextFlowNode>) {
   };
 
   return (
-    <div className="relative">
+    <div className="relative group/node">
       {/* Input Handle (Left side - to receive data from LLM output) */}
-      <Handle
-        type="target"
-        position={Position.Left}
-        id="input"
-        style={{ ...handleStyle, top: '50%' }}
-      />
+      <div className="absolute left-0 top-1/2 -translate-y-1/2" style={{ transform: 'translate(-6px, -50%)' }}>
+        <HandleWithLabel
+          type="target"
+          position={Position.Left}
+          id="input"
+          nodeId={id}
+          label="input"
+          color="magenta"
+        />
+      </div>
 
       {/* Output Handle (Right side) */}
-      <Handle
-        type="source"
-        position={Position.Right}
-        id="output"
-        style={{ ...handleStyle, top: '50%' }}
-      />
+      <div className="absolute right-0 top-1/2 -translate-y-1/2" style={{ transform: 'translate(6px, -50%)' }}>
+        <HandleWithLabel
+          type="source"
+          position={Position.Right}
+          id="output"
+          nodeId={id}
+          label="output"
+          color="green"
+        />
+      </div>
 
       <NodeShell
         title={displayLabel}
@@ -378,14 +454,18 @@ export function ImageNode({ id, data, selected }: NodeProps<ImageFlowNode>) {
   const currentImage = images[currentIndex];
 
   return (
-    <div className="relative">
+    <div className="relative group/node">
       {/* Output Handle */}
-      <Handle
-        type="source"
-        position={Position.Right}
-        id="output"
-        style={{ ...handleStyle, top: '50%' }}
-      />
+      <div className="absolute right-0 top-1/2 -translate-y-1/2" style={{ transform: 'translate(6px, -50%)' }}>
+        <HandleWithLabel
+          type="source"
+          position={Position.Right}
+          id="output"
+          nodeId={id}
+          label="output"
+          color="green"
+        />
+      </div>
 
       <NodeShell
         title={displayLabel}
@@ -712,45 +792,49 @@ export function LLMNode({ id, data, selected }: NodeProps<LLMFlowNode>) {
   };
 
   return (
-    <div className="relative">
+    <div className="relative group/node">
       {/* Input Handles (Left side) */}
       <div className="absolute left-0 top-0 h-full flex flex-col justify-center gap-8" style={{ transform: 'translateX(-6px)' }}>
-        <div className="relative">
-          <Handle
-            type="target"
-            position={Position.Left}
-            id={LLM_HANDLES.SYSTEM_PROMPT}
-            style={{ ...handleStyle, position: 'relative', top: 0 }}
-          />
-          <HandleLabel label="system_prompt" position="left" className="top-[-16px]" />
-        </div>
-        <div className="relative">
-          <Handle
-            type="target"
-            position={Position.Left}
-            id={LLM_HANDLES.USER_MESSAGE}
-            style={{ ...handleStyle, position: 'relative', top: 0 }}
-          />
-          <HandleLabel label="user_message" position="left" className="top-[-16px]" />
-        </div>
-        <div className="relative">
-          <Handle
-            type="target"
-            position={Position.Left}
-            id={LLM_HANDLES.IMAGES}
-            style={{ ...handleStyle, position: 'relative', top: 0 }}
-          />
-          <HandleLabel label="images" position="left" className="top-[-16px]" />
-        </div>
+        <HandleWithLabel
+          type="target"
+          position={Position.Left}
+          id={LLM_HANDLES.SYSTEM_PROMPT}
+          nodeId={id}
+          label="system_prompt"
+          color="magenta"
+          style={{ position: 'relative', top: 0 }}
+        />
+        <HandleWithLabel
+          type="target"
+          position={Position.Left}
+          id={LLM_HANDLES.USER_MESSAGE}
+          nodeId={id}
+          label="user_message"
+          color="magenta"
+          style={{ position: 'relative', top: 0 }}
+        />
+        <HandleWithLabel
+          type="target"
+          position={Position.Left}
+          id={LLM_HANDLES.IMAGES}
+          nodeId={id}
+          label="images"
+          color="cyan"
+          style={{ position: 'relative', top: 0 }}
+        />
       </div>
 
       {/* Output Handle (Right side) */}
-      <Handle
-        type="source"
-        position={Position.Right}
-        id={LLM_HANDLES.OUTPUT}
-        style={{ ...handleStyle, top: '50%' }}
-      />
+      <div className="absolute right-0 top-1/2 -translate-y-1/2" style={{ transform: 'translate(6px, -50%)' }}>
+        <HandleWithLabel
+          type="source"
+          position={Position.Right}
+          id={LLM_HANDLES.OUTPUT}
+          nodeId={id}
+          label="output"
+          color="green"
+        />
+      </div>
 
       <NodeShell
         title={displayLabel}
@@ -835,27 +919,18 @@ export function LLMNode({ id, data, selected }: NodeProps<LLMFlowNode>) {
             </Select>
           </div>
 
-          {/* Status Display - only loading and errors, output goes to connected Text nodes */}
-          {(data.error || data.isLoading) && (
+          {/* Error Display - only show errors, loading is shown in button */}
+          {data.error && (
             <div
               className={cn(
                 'rounded-lg p-3 text-sm',
-                data.error
-                  ? 'bg-red-500/10 text-red-400 border border-red-500/30'
-                  : 'bg-muted/40 text-foreground/80'
+                'bg-red-500/10 text-red-400 border border-red-500/30'
               )}
             >
-              {data.isLoading ? (
-                <div className="flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>Running...</span>
-                </div>
-              ) : (
-                <div className="flex items-start gap-2">
-                  <X className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                  <span>{data.error}</span>
-                </div>
-              )}
+              <div className="flex items-start gap-2">
+                <X className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                <span>{data.error}</span>
+              </div>
             </div>
           )}
 
