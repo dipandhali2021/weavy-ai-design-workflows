@@ -34,12 +34,30 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
-import { isAuthenticated, getStoredUser, setStoredToken, setStoredUser, clearAuth, type AuthUser } from '@/lib/auth';
+import {
+  isAuthenticated,
+  getStoredUser,
+  setStoredToken,
+  setStoredUser,
+  clearAuth,
+  type AuthUser,
+} from '@/lib/auth';
 import { api, type Workflow, type Folder } from '@/lib/api';
 import { BsDiscord } from 'react-icons/bs';
 import { PiUsers } from 'react-icons/pi';
 import { IoIosArrowBack, IoIosArrowForward } from 'react-icons/io';
-import { LogOut, Copy, ExternalLink, FolderInput, Pencil, Trash2, File, FolderPlus, ChevronRight, Folder as FolderIcon } from 'lucide-react';
+import {
+  LogOut,
+  Copy,
+  ExternalLink,
+  FolderInput,
+  Pencil,
+  Trash2,
+  File,
+  FolderPlus,
+  ChevronRight,
+  Folder as FolderIcon,
+} from 'lucide-react';
 
 type ShowcaseItem = {
   title: string;
@@ -230,14 +248,14 @@ function formatTimeAgo(dateString: string): string {
   return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
 }
 
-function FileCard({ 
-  workflow, 
-  onRename, 
-  onDelete, 
+function FileCard({
+  workflow,
+  onRename,
+  onDelete,
   onDuplicate,
   onMove,
-}: { 
-  workflow: Workflow; 
+}: {
+  workflow: Workflow;
   onRename: (id: string, newName: string) => void;
   onDelete: (id: string) => void;
   onDuplicate: (id: string) => void;
@@ -274,7 +292,10 @@ function FileCard({
             >
               <div className="h-[220px] w-full bg-background/40">
                 <img
-                  src={workflow.thumbnail || 'https://app.weavy.ai/workflow-default-cover.png'}
+                  src={
+                    workflow.thumbnail ||
+                    'https://app.weavy.ai/workflow-default-cover.png'
+                  }
                   alt="workflow cover"
                   className="h-full w-full object-cover invert"
                 />
@@ -296,29 +317,41 @@ function FileCard({
             <ExternalLink className="mr-2 h-4 w-4" />
             Open
           </ContextMenuItem>
-          <ContextMenuItem onClick={handleOpenNewTab} className="cursor-pointer">
+          <ContextMenuItem
+            onClick={handleOpenNewTab}
+            className="cursor-pointer"
+          >
             <ExternalLink className="mr-2 h-4 w-4" />
             Open in a new tab
           </ContextMenuItem>
           <ContextMenuSeparator />
-          <ContextMenuItem onClick={() => onDuplicate(workflow.id)} className="cursor-pointer">
+          <ContextMenuItem
+            onClick={() => onDuplicate(workflow.id)}
+            className="cursor-pointer"
+          >
             <Copy className="mr-2 h-4 w-4" />
             Duplicate
           </ContextMenuItem>
-          <ContextMenuItem onClick={() => onMove(workflow)} className="cursor-pointer">
+          <ContextMenuItem
+            onClick={() => onMove(workflow)}
+            className="cursor-pointer"
+          >
             <FolderInput className="mr-2 h-4 w-4" />
             Move
           </ContextMenuItem>
-          <ContextMenuItem onClick={() => {
-            setNewName(workflow.name);
-            setRenameDialogOpen(true);
-          }} className="cursor-pointer">
+          <ContextMenuItem
+            onClick={() => {
+              setNewName(workflow.name);
+              setRenameDialogOpen(true);
+            }}
+            className="cursor-pointer"
+          >
             <Pencil className="mr-2 h-4 w-4" />
             Rename
           </ContextMenuItem>
           <ContextMenuSeparator />
-          <ContextMenuItem 
-            onClick={() => onDelete(workflow.id)} 
+          <ContextMenuItem
+            onClick={() => onDelete(workflow.id)}
             className="cursor-pointer text-red-500 focus:text-red-500"
           >
             <Trash2 className="mr-2 h-4 w-4" />
@@ -348,10 +381,16 @@ function FileCard({
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setRenameDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setRenameDialogOpen(false)}
+            >
               Cancel
             </Button>
-            <Button onClick={handleRename} className="bg-[#faffc7] text-black hover:bg-[#f4f8cd]">
+            <Button
+              onClick={handleRename}
+              className="bg-[#faffc7] text-black hover:bg-[#f4f8cd]"
+            >
               Rename
             </Button>
           </DialogFooter>
@@ -361,14 +400,14 @@ function FileCard({
   );
 }
 
-function FolderCard({ 
-  folder, 
+function FolderCard({
+  folder,
   onOpen,
-  onRename, 
-  onDelete, 
+  onRename,
+  onDelete,
   onMove,
-}: { 
-  folder: Folder; 
+}: {
+  folder: Folder;
   onOpen: (folder: Folder) => void;
   onRename: (id: string, newName: string) => void;
   onDelete: (id: string) => void;
@@ -402,15 +441,19 @@ function FolderCard({
             className="group space-y-2 text-left"
           >
             <div className="flex h-[220px] w-full items-center justify-center rounded-md border border-border bg-card shadow-xs transition-colors hover:border-foreground/30">
-              <img 
-                src="https://app.weavy.ai/icons/folder.svg" 
-                alt="folder" 
+              <img
+                src="https://app.weavy.ai/icons/folder.svg"
+                alt="folder"
                 className="h-16 w-16 opacity-80 invert"
               />
             </div>
             <div>
-              <div className="text-[16px] font-medium text-foreground">{folder.name}</div>
-              <div className="text-[14px] text-muted-foreground">{folder.fileCount} Files</div>
+              <div className="text-[16px] font-medium text-foreground">
+                {folder.name}
+              </div>
+              <div className="text-[14px] text-muted-foreground">
+                {folder.fileCount} Files
+              </div>
             </div>
           </button>
         </ContextMenuTrigger>
@@ -418,22 +461,31 @@ function FolderCard({
           <ContextMenuItem onClick={handleOpen} className="cursor-pointer">
             Open
           </ContextMenuItem>
-          <ContextMenuItem onClick={handleOpenNewTab} className="cursor-pointer">
+          <ContextMenuItem
+            onClick={handleOpenNewTab}
+            className="cursor-pointer"
+          >
             Open in a new tab
           </ContextMenuItem>
           <ContextMenuSeparator />
-          <ContextMenuItem onClick={() => {
-            setNewName(folder.name);
-            setRenameDialogOpen(true);
-          }} className="cursor-pointer">
+          <ContextMenuItem
+            onClick={() => {
+              setNewName(folder.name);
+              setRenameDialogOpen(true);
+            }}
+            className="cursor-pointer"
+          >
             Rename
           </ContextMenuItem>
-          <ContextMenuItem onClick={() => onMove(folder)} className="cursor-pointer">
+          <ContextMenuItem
+            onClick={() => onMove(folder)}
+            className="cursor-pointer"
+          >
             Move
           </ContextMenuItem>
           <ContextMenuSeparator />
-          <ContextMenuItem 
-            onClick={() => onDelete(folder.id)} 
+          <ContextMenuItem
+            onClick={() => onDelete(folder.id)}
             className="cursor-pointer text-red-500 focus:text-red-500"
           >
             Delete
@@ -462,10 +514,16 @@ function FolderCard({
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setRenameDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setRenameDialogOpen(false)}
+            >
               Cancel
             </Button>
-            <Button onClick={handleRename} className="bg-[#faffc7] text-black hover:bg-[#f4f8cd]">
+            <Button
+              onClick={handleRename}
+              className="bg-[#faffc7] text-black hover:bg-[#f4f8cd]"
+            >
               Rename
             </Button>
           </DialogFooter>
@@ -475,40 +533,53 @@ function FolderCard({
   );
 }
 
-export default function DashboardPage() {
+function DashboardPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
   const [workflows, setWorkflows] = React.useState<Workflow[]>([]);
   const [folders, setFolders] = React.useState<Folder[]>([]);
-  const [currentFolderId, setCurrentFolderId] = React.useState<string | null>(null);
-  const [breadcrumbs, setBreadcrumbs] = React.useState<{ id: string | null; name: string }[]>([{ id: null, name: 'My files' }]);
+  const [currentFolderId, setCurrentFolderId] = React.useState<string | null>(
+    null
+  );
+  const [breadcrumbs, setBreadcrumbs] = React.useState<
+    { id: string | null; name: string }[]
+  >([{ id: null, name: 'My files' }]);
   const [user, setUser] = React.useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
   const [isCreating, setIsCreating] = React.useState(false);
-  const [createFolderDialogOpen, setCreateFolderDialogOpen] = React.useState(false);
+  const [createFolderDialogOpen, setCreateFolderDialogOpen] =
+    React.useState(false);
   const [newFolderName, setNewFolderName] = React.useState('');
-  
+
   // Search state
   const [searchQuery, setSearchQuery] = React.useState('');
-  
+
   // Move dialog state
   const [moveDialogOpen, setMoveDialogOpen] = React.useState(false);
-  const [workflowToMove, setWorkflowToMove] = React.useState<Workflow | null>(null);
+  const [workflowToMove, setWorkflowToMove] = React.useState<Workflow | null>(
+    null
+  );
   const [allFolders, setAllFolders] = React.useState<Folder[]>([]);
-  const [selectedMoveTarget, setSelectedMoveTarget] = React.useState<string | null>(null);
+  const [selectedMoveTarget, setSelectedMoveTarget] = React.useState<
+    string | null
+  >(null);
 
   // Filtered folders and workflows based on search query
   const filteredFolders = React.useMemo(() => {
     if (!searchQuery.trim()) return folders;
     const query = searchQuery.toLowerCase();
-    return folders.filter(folder => folder.name.toLowerCase().includes(query));
+    return folders.filter((folder) =>
+      folder.name.toLowerCase().includes(query)
+    );
   }, [folders, searchQuery]);
 
   const filteredWorkflows = React.useMemo(() => {
     if (!searchQuery.trim()) return workflows;
     const query = searchQuery.toLowerCase();
-    return workflows.filter(workflow => workflow.name.toLowerCase().includes(query));
+    return workflows.filter((workflow) =>
+      workflow.name.toLowerCase().includes(query)
+    );
   }, [workflows, searchQuery]);
 
   // Handle token from OAuth callback
@@ -538,13 +609,13 @@ export default function DashboardPage() {
           if (response.success && response.user) {
             setUser(response.user as AuthUser);
             setStoredUser(response.user as AuthUser);
-            
+
             // Fetch workflows and folders for current folder (root)
             const [workflowsResponse, foldersResponse] = await Promise.all([
               api.getWorkflows(null), // Get root workflows
-              api.getFolders(null),   // Get root folders
+              api.getFolders(null), // Get root folders
             ]);
-            
+
             if (workflowsResponse.success && workflowsResponse.workflows) {
               setWorkflows(workflowsResponse.workflows);
             }
@@ -581,7 +652,7 @@ export default function DashboardPage() {
   const handleCreateNewFile = React.useCallback(async () => {
     if (isCreating) return;
     setIsCreating(true);
-    
+
     try {
       const response = await api.createWorkflow('untitled', currentFolderId);
       if (response.success && response.workflow) {
@@ -595,86 +666,104 @@ export default function DashboardPage() {
     }
   }, [isCreating, router, currentFolderId]);
 
-  const handleRenameWorkflow = React.useCallback(async (id: string, newName: string) => {
-    try {
-      const response = await api.updateWorkflow(id, { name: newName });
-      if (response.success && response.workflow) {
-        setWorkflows(prev => 
-          prev.map(w => w.id === id ? { ...w, name: newName } : w)
-        );
+  const handleRenameWorkflow = React.useCallback(
+    async (id: string, newName: string) => {
+      try {
+        const response = await api.updateWorkflow(id, { name: newName });
+        if (response.success && response.workflow) {
+          setWorkflows((prev) =>
+            prev.map((w) => (w.id === id ? { ...w, name: newName } : w))
+          );
+        }
+      } catch (error) {
+        console.error('Failed to rename workflow:', error);
       }
-    } catch (error) {
-      console.error('Failed to rename workflow:', error);
-    }
-  }, []);
+    },
+    []
+  );
 
   const handleDeleteWorkflow = React.useCallback(async (id: string) => {
     try {
       const response = await api.deleteWorkflow(id);
       if (response.success) {
-        setWorkflows(prev => prev.filter(w => w.id !== id));
+        setWorkflows((prev) => prev.filter((w) => w.id !== id));
       }
     } catch (error) {
       console.error('Failed to delete workflow:', error);
     }
   }, []);
 
-  const handleDuplicateWorkflow = React.useCallback(async (id: string) => {
-    try {
-      const workflow = workflows.find(w => w.id === id);
-      if (!workflow) return;
-      
-      const response = await api.createWorkflow(`${workflow.name} (copy)`, currentFolderId);
-      if (response.success && response.workflow) {
-        setWorkflows(prev => [response.workflow!, ...prev]);
+  const handleDuplicateWorkflow = React.useCallback(
+    async (id: string) => {
+      try {
+        const workflow = workflows.find((w) => w.id === id);
+        if (!workflow) return;
+
+        const response = await api.createWorkflow(
+          `${workflow.name} (copy)`,
+          currentFolderId
+        );
+        if (response.success && response.workflow) {
+          setWorkflows((prev) => [response.workflow!, ...prev]);
+        }
+      } catch (error) {
+        console.error('Failed to duplicate workflow:', error);
       }
-    } catch (error) {
-      console.error('Failed to duplicate workflow:', error);
-    }
-  }, [workflows, currentFolderId]);
+    },
+    [workflows, currentFolderId]
+  );
 
   // Folder navigation handler
-  const handleNavigateToFolder = React.useCallback(async (folderId: string | null, folderName?: string) => {
-    try {
-      const [workflowsResponse, foldersResponse] = await Promise.all([
-        api.getWorkflows(folderId),
-        api.getFolders(folderId),
-      ]);
-      
-      if (workflowsResponse.success && workflowsResponse.workflows) {
-        setWorkflows(workflowsResponse.workflows);
-      }
-      if (foldersResponse.success && foldersResponse.folders) {
-        setFolders(foldersResponse.folders);
-      }
-      
-      setCurrentFolderId(folderId);
-      
-      // Update breadcrumbs
-      if (folderId === null) {
-        setBreadcrumbs([{ id: null, name: 'My files' }]);
-      } else if (folderName) {
-        // Check if we're navigating back in breadcrumbs
-        const existingIndex = breadcrumbs.findIndex(b => b.id === folderId);
-        if (existingIndex >= 0) {
-          setBreadcrumbs(breadcrumbs.slice(0, existingIndex + 1));
-        } else {
-          setBreadcrumbs(prev => [...prev, { id: folderId, name: folderName }]);
+  const handleNavigateToFolder = React.useCallback(
+    async (folderId: string | null, folderName?: string) => {
+      try {
+        const [workflowsResponse, foldersResponse] = await Promise.all([
+          api.getWorkflows(folderId),
+          api.getFolders(folderId),
+        ]);
+
+        if (workflowsResponse.success && workflowsResponse.workflows) {
+          setWorkflows(workflowsResponse.workflows);
         }
+        if (foldersResponse.success && foldersResponse.folders) {
+          setFolders(foldersResponse.folders);
+        }
+
+        setCurrentFolderId(folderId);
+
+        // Update breadcrumbs
+        if (folderId === null) {
+          setBreadcrumbs([{ id: null, name: 'My files' }]);
+        } else if (folderName) {
+          // Check if we're navigating back in breadcrumbs
+          const existingIndex = breadcrumbs.findIndex((b) => b.id === folderId);
+          if (existingIndex >= 0) {
+            setBreadcrumbs(breadcrumbs.slice(0, existingIndex + 1));
+          } else {
+            setBreadcrumbs((prev) => [
+              ...prev,
+              { id: folderId, name: folderName },
+            ]);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to navigate to folder:', error);
       }
-    } catch (error) {
-      console.error('Failed to navigate to folder:', error);
-    }
-  }, [breadcrumbs]);
+    },
+    [breadcrumbs]
+  );
 
   // Create folder handler
   const handleCreateFolder = React.useCallback(async () => {
     if (!newFolderName.trim()) return;
-    
+
     try {
-      const response = await api.createFolder(newFolderName.trim(), currentFolderId);
+      const response = await api.createFolder(
+        newFolderName.trim(),
+        currentFolderId
+      );
       if (response.success && response.folder) {
-        setFolders(prev => [response.folder!, ...prev]);
+        setFolders((prev) => [response.folder!, ...prev]);
         setCreateFolderDialogOpen(false);
         setNewFolderName('');
       }
@@ -684,29 +773,32 @@ export default function DashboardPage() {
   }, [newFolderName, currentFolderId]);
 
   // Folder rename handler
-  const handleRenameFolder = React.useCallback(async (id: string, newName: string) => {
-    try {
-      const response = await api.updateFolder(id, newName);
-      if (response.success && response.folder) {
-        setFolders(prev => 
-          prev.map(f => f.id === id ? { ...f, name: newName } : f)
-        );
-        // Update breadcrumbs if renaming current folder
-        setBreadcrumbs(prev => 
-          prev.map(b => b.id === id ? { ...b, name: newName } : b)
-        );
+  const handleRenameFolder = React.useCallback(
+    async (id: string, newName: string) => {
+      try {
+        const response = await api.updateFolder(id, newName);
+        if (response.success && response.folder) {
+          setFolders((prev) =>
+            prev.map((f) => (f.id === id ? { ...f, name: newName } : f))
+          );
+          // Update breadcrumbs if renaming current folder
+          setBreadcrumbs((prev) =>
+            prev.map((b) => (b.id === id ? { ...b, name: newName } : b))
+          );
+        }
+      } catch (error) {
+        console.error('Failed to rename folder:', error);
       }
-    } catch (error) {
-      console.error('Failed to rename folder:', error);
-    }
-  }, []);
+    },
+    []
+  );
 
   // Folder delete handler
   const handleDeleteFolder = React.useCallback(async (id: string) => {
     try {
       const response = await api.deleteFolder(id);
       if (response.success) {
-        setFolders(prev => prev.filter(f => f.id !== id));
+        setFolders((prev) => prev.filter((f) => f.id !== id));
       }
     } catch (error) {
       console.error('Failed to delete folder:', error);
@@ -714,9 +806,12 @@ export default function DashboardPage() {
   }, []);
 
   // Open folder
-  const handleOpenFolder = React.useCallback((folder: Folder) => {
-    handleNavigateToFolder(folder.id, folder.name);
-  }, [handleNavigateToFolder]);
+  const handleOpenFolder = React.useCallback(
+    (folder: Folder) => {
+      handleNavigateToFolder(folder.id, folder.name);
+    },
+    [handleNavigateToFolder]
+  );
 
   // Move folder dialog (placeholder - same structure as workflow move)
   const handleMoveFolder = React.useCallback((folder: Folder) => {
@@ -728,7 +823,7 @@ export default function DashboardPage() {
   const openMoveDialog = React.useCallback(async (workflow: Workflow) => {
     setWorkflowToMove(workflow);
     setSelectedMoveTarget(workflow.folderId || null);
-    
+
     try {
       // Fetch all folders for the user (at root level)
       const response = await api.getFolders(null);
@@ -738,24 +833,28 @@ export default function DashboardPage() {
     } catch (error) {
       console.error('Failed to fetch folders:', error);
     }
-    
+
     setMoveDialogOpen(true);
   }, []);
 
   // Handle move workflow
   const handleMoveWorkflow = React.useCallback(async () => {
     if (!workflowToMove) return;
-    
+
     try {
-      const response = await api.updateWorkflow(workflowToMove.id, { folderId: selectedMoveTarget });
+      const response = await api.updateWorkflow(workflowToMove.id, {
+        folderId: selectedMoveTarget,
+      });
       if (response.success) {
         // If moving to a different folder than current, remove from current view
         if (selectedMoveTarget !== currentFolderId) {
-          setWorkflows(prev => prev.filter(w => w.id !== workflowToMove.id));
+          setWorkflows((prev) =>
+            prev.filter((w) => w.id !== workflowToMove.id)
+          );
         }
         setMoveDialogOpen(false);
         setWorkflowToMove(null);
-        
+
         // Refresh folder counts
         const foldersResponse = await api.getFolders(currentFolderId);
         if (foldersResponse.success && foldersResponse.folders) {
@@ -835,8 +934,6 @@ export default function DashboardPage() {
                 </span>
                 <CaretDown className="text-foreground/80" />
               </button>
-              
-              
 
               <Button
                 type="button"
@@ -865,14 +962,17 @@ export default function DashboardPage() {
                     <span className="text-[14px] font-medium">My Files</span>
                     <Popover>
                       <PopoverTrigger asChild>
-                        <button 
+                        <button
                           type="button"
                           className="ml-auto p-1 rounded hover:bg-muted/30 transition-colors"
                         >
                           <PlusIcon className="h-4 w-4" />
                         </button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-40 p-1 bg-card border-border" align="start">
+                      <PopoverContent
+                        className="w-40 p-1 bg-card border-border"
+                        align="start"
+                      >
                         <button
                           type="button"
                           onClick={handleCreateNewFile}
@@ -1036,13 +1136,19 @@ export default function DashboardPage() {
                 <div className="flex items-center gap-1 text-[16px] font-medium text-foreground">
                   {breadcrumbs.map((crumb, index) => (
                     <React.Fragment key={crumb.id ?? 'root'}>
-                      {index > 0 && <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+                      {index > 0 && (
+                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                      )}
                       <button
                         type="button"
-                        onClick={() => handleNavigateToFolder(crumb.id, crumb.name)}
+                        onClick={() =>
+                          handleNavigateToFolder(crumb.id, crumb.name)
+                        }
                         className={cn(
-                          "hover:text-foreground/80 transition-colors",
-                          index === breadcrumbs.length - 1 ? "text-foreground font-semibold" : "text-muted-foreground"
+                          'hover:text-foreground/80 transition-colors',
+                          index === breadcrumbs.length - 1
+                            ? 'text-foreground font-semibold'
+                            : 'text-muted-foreground'
                         )}
                       >
                         {crumb.name}
@@ -1101,18 +1207,23 @@ export default function DashboardPage() {
 
               {filesView === 'grid' ? (
                 <div className="mt-6">
-                  {filteredFolders.length === 0 && filteredWorkflows.length === 0 ? (
+                  {filteredFolders.length === 0 &&
+                  filteredWorkflows.length === 0 ? (
                     /* Empty state */
                     <div className="flex flex-col items-center justify-center py-20 text-center">
                       <div className="mb-4 rounded-lg border border-border bg-card/40 p-4">
-                        <img 
-                          src="https://app.weavy.ai/icons/folder.svg" 
-                          alt="folder" 
+                        <img
+                          src="https://app.weavy.ai/icons/folder.svg"
+                          alt="folder"
                           className="h-12 w-12 opacity-60 invert"
                         />
                       </div>
-                      <h3 className="text-lg font-medium text-foreground">This folder is empty</h3>
-                      <p className="mt-1 text-sm text-muted-foreground">Create new files or move files here from other folders</p>
+                      <h3 className="text-lg font-medium text-foreground">
+                        This folder is empty
+                      </h3>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        Create new files or move files here from other folders
+                      </p>
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
@@ -1129,9 +1240,9 @@ export default function DashboardPage() {
                       ))}
                       {/* Workflow cards */}
                       {filteredWorkflows.map((workflow) => (
-                        <FileCard 
-                          key={workflow.id} 
-                          workflow={workflow} 
+                        <FileCard
+                          key={workflow.id}
+                          workflow={workflow}
                           onRename={handleRenameWorkflow}
                           onDelete={handleDeleteWorkflow}
                           onDuplicate={handleDuplicateWorkflow}
@@ -1143,18 +1254,23 @@ export default function DashboardPage() {
                 </div>
               ) : (
                 <div className="mt-6">
-                  {filteredFolders.length === 0 && filteredWorkflows.length === 0 ? (
+                  {filteredFolders.length === 0 &&
+                  filteredWorkflows.length === 0 ? (
                     /* Empty state for list view */
                     <div className="flex flex-col items-center justify-center py-20 text-center">
                       <div className="mb-4 rounded-lg border border-border bg-card/40 p-4">
-                        <img 
-                          src="https://app.weavy.ai/icons/folder.svg" 
-                          alt="folder" 
+                        <img
+                          src="https://app.weavy.ai/icons/folder.svg"
+                          alt="folder"
                           className="h-12 w-12 opacity-60 invert"
                         />
                       </div>
-                      <h3 className="text-lg font-medium text-foreground">This folder is empty</h3>
-                      <p className="mt-1 text-sm text-muted-foreground">Create new files or move files here from other folders</p>
+                      <h3 className="text-lg font-medium text-foreground">
+                        This folder is empty
+                      </h3>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        Create new files or move files here from other folders
+                      </p>
                     </div>
                   ) : (
                     <>
@@ -1186,14 +1302,19 @@ export default function DashboardPage() {
                               <ContextMenuTrigger asChild>
                                 <TableRow
                                   className="group border-0 hover:bg-transparent cursor-pointer"
-                                  onClick={() => handleNavigateToFolder(folder.id, folder.name)}
+                                  onClick={() =>
+                                    handleNavigateToFolder(
+                                      folder.id,
+                                      folder.name
+                                    )
+                                  }
                                 >
                                   <TableCell className="rounded-l-md py-5 pl-4 pr-4 group-hover:bg-card/60">
                                     <div className="flex items-center gap-6">
                                       <div className="flex h-[74px] w-[120px] items-center justify-center rounded-md bg-muted/20">
-                                        <img 
-                                          src="https://app.weavy.ai/icons/folder.svg" 
-                                          alt="folder" 
+                                        <img
+                                          src="https://app.weavy.ai/icons/folder.svg"
+                                          alt="folder"
                                           className="h-10 w-10 opacity-80 invert"
                                         />
                                       </div>
@@ -1217,27 +1338,55 @@ export default function DashboardPage() {
                                 </TableRow>
                               </ContextMenuTrigger>
                               <ContextMenuContent className="w-48 bg-card border-border">
-                                <ContextMenuItem onClick={() => handleNavigateToFolder(folder.id, folder.name)} className="cursor-pointer">
+                                <ContextMenuItem
+                                  onClick={() =>
+                                    handleNavigateToFolder(
+                                      folder.id,
+                                      folder.name
+                                    )
+                                  }
+                                  className="cursor-pointer"
+                                >
                                   Open
                                 </ContextMenuItem>
-                                <ContextMenuItem onClick={() => window.open(`/dashboard?folderId=${folder.id}`, '_blank')} className="cursor-pointer">
+                                <ContextMenuItem
+                                  onClick={() =>
+                                    window.open(
+                                      `/dashboard?folderId=${folder.id}`,
+                                      '_blank'
+                                    )
+                                  }
+                                  className="cursor-pointer"
+                                >
                                   Open in a new tab
                                 </ContextMenuItem>
                                 <ContextMenuSeparator />
-                                <ContextMenuItem onClick={() => {
-                                  const newName = prompt('Enter new folder name:', folder.name);
-                                  if (newName && newName.trim()) {
-                                    handleRenameFolder(folder.id, newName.trim());
-                                  }
-                                }} className="cursor-pointer">
+                                <ContextMenuItem
+                                  onClick={() => {
+                                    const newName = prompt(
+                                      'Enter new folder name:',
+                                      folder.name
+                                    );
+                                    if (newName && newName.trim()) {
+                                      handleRenameFolder(
+                                        folder.id,
+                                        newName.trim()
+                                      );
+                                    }
+                                  }}
+                                  className="cursor-pointer"
+                                >
                                   Rename
                                 </ContextMenuItem>
-                                <ContextMenuItem onClick={() => handleMoveFolder(folder)} className="cursor-pointer">
+                                <ContextMenuItem
+                                  onClick={() => handleMoveFolder(folder)}
+                                  className="cursor-pointer"
+                                >
                                   Move
                                 </ContextMenuItem>
                                 <ContextMenuSeparator />
-                                <ContextMenuItem 
-                                  onClick={() => handleDeleteFolder(folder.id)} 
+                                <ContextMenuItem
+                                  onClick={() => handleDeleteFolder(folder.id)}
                                   className="cursor-pointer text-red-500 focus:text-red-500"
                                 >
                                   Delete
@@ -1245,20 +1394,27 @@ export default function DashboardPage() {
                               </ContextMenuContent>
                             </ContextMenu>
                           ))}
-                          
+
                           {/* Workflow rows */}
                           {filteredWorkflows.map((workflow) => (
                             <ContextMenu key={workflow.id}>
                               <ContextMenuTrigger asChild>
                                 <TableRow
                                   className="group border-0 hover:bg-transparent cursor-pointer"
-                                  onClick={() => router.push(`/dashboard/workflow/${workflow.id}`)}
+                                  onClick={() =>
+                                    router.push(
+                                      `/dashboard/workflow/${workflow.id}`
+                                    )
+                                  }
                                 >
                                   <TableCell className="rounded-l-md py-5 pl-4 pr-4 group-hover:bg-card/60">
                                     <div className="flex items-center gap-6">
                                       <div className="h-[74px] w-[120px] overflow-hidden rounded-md bg-muted/20">
                                         <img
-                                          src={workflow.thumbnail || 'https://app.weavy.ai/workflow-default-cover.png'}
+                                          src={
+                                            workflow.thumbnail ||
+                                            'https://app.weavy.ai/workflow-default-cover.png'
+                                          }
                                           alt="workflow cover"
                                           className="h-full w-full object-cover invert"
                                         />
@@ -1283,35 +1439,69 @@ export default function DashboardPage() {
                                 </TableRow>
                               </ContextMenuTrigger>
                               <ContextMenuContent className="w-48 bg-card border-border">
-                                <ContextMenuItem onClick={() => router.push(`/dashboard/workflow/${workflow.id}`)} className="cursor-pointer">
+                                <ContextMenuItem
+                                  onClick={() =>
+                                    router.push(
+                                      `/dashboard/workflow/${workflow.id}`
+                                    )
+                                  }
+                                  className="cursor-pointer"
+                                >
                                   <ExternalLink className="mr-2 h-4 w-4" />
                                   Open
                                 </ContextMenuItem>
-                                <ContextMenuItem onClick={() => window.open(`/dashboard/workflow/${workflow.id}`, '_blank')} className="cursor-pointer">
+                                <ContextMenuItem
+                                  onClick={() =>
+                                    window.open(
+                                      `/dashboard/workflow/${workflow.id}`,
+                                      '_blank'
+                                    )
+                                  }
+                                  className="cursor-pointer"
+                                >
                                   <ExternalLink className="mr-2 h-4 w-4" />
                                   Open in a new tab
                                 </ContextMenuItem>
                                 <ContextMenuSeparator />
-                                <ContextMenuItem onClick={() => handleDuplicateWorkflow(workflow.id)} className="cursor-pointer">
+                                <ContextMenuItem
+                                  onClick={() =>
+                                    handleDuplicateWorkflow(workflow.id)
+                                  }
+                                  className="cursor-pointer"
+                                >
                                   <Copy className="mr-2 h-4 w-4" />
                                   Duplicate
                                 </ContextMenuItem>
-                                <ContextMenuItem onClick={() => openMoveDialog(workflow)} className="cursor-pointer">
+                                <ContextMenuItem
+                                  onClick={() => openMoveDialog(workflow)}
+                                  className="cursor-pointer"
+                                >
                                   <FolderInput className="mr-2 h-4 w-4" />
                                   Move
                                 </ContextMenuItem>
-                                <ContextMenuItem onClick={() => {
-                                  const newName = prompt('Enter new name:', workflow.name);
-                                  if (newName && newName.trim()) {
-                                    handleRenameWorkflow(workflow.id, newName.trim());
-                                  }
-                                }} className="cursor-pointer">
+                                <ContextMenuItem
+                                  onClick={() => {
+                                    const newName = prompt(
+                                      'Enter new name:',
+                                      workflow.name
+                                    );
+                                    if (newName && newName.trim()) {
+                                      handleRenameWorkflow(
+                                        workflow.id,
+                                        newName.trim()
+                                      );
+                                    }
+                                  }}
+                                  className="cursor-pointer"
+                                >
                                   <Pencil className="mr-2 h-4 w-4" />
                                   Rename
                                 </ContextMenuItem>
                                 <ContextMenuSeparator />
-                                <ContextMenuItem 
-                                  onClick={() => handleDeleteWorkflow(workflow.id)} 
+                                <ContextMenuItem
+                                  onClick={() =>
+                                    handleDeleteWorkflow(workflow.id)
+                                  }
                                   className="cursor-pointer text-red-500 focus:text-red-500"
                                 >
                                   <Trash2 className="mr-2 h-4 w-4" />
@@ -1325,7 +1515,8 @@ export default function DashboardPage() {
 
                       <div className="mt-8 flex items-center justify-end gap-2 text-[14px] text-muted-foreground">
                         <span>
-                          1–{filteredFolders.length + filteredWorkflows.length} of {filteredFolders.length + filteredWorkflows.length}
+                          1–{filteredFolders.length + filteredWorkflows.length}{' '}
+                          of {filteredFolders.length + filteredWorkflows.length}
                         </span>
                         <Button
                           variant="ghost"
@@ -1356,13 +1547,19 @@ export default function DashboardPage() {
       </div>
 
       {/* Create folder dialog */}
-      <Dialog open={createFolderDialogOpen} onOpenChange={setCreateFolderDialogOpen}>
+      <Dialog
+        open={createFolderDialogOpen}
+        onOpenChange={setCreateFolderDialogOpen}
+      >
         <DialogContent className="sm:max-w-[400px] bg-card border-border">
           <DialogHeader>
             <DialogTitle>Create folder</DialogTitle>
           </DialogHeader>
           <div className="py-4">
-            <label htmlFor="folder-name" className="text-sm text-muted-foreground mb-2 block">
+            <label
+              htmlFor="folder-name"
+              className="text-sm text-muted-foreground mb-2 block"
+            >
               Name
             </label>
             <Input
@@ -1378,10 +1575,16 @@ export default function DashboardPage() {
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setCreateFolderDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setCreateFolderDialogOpen(false)}
+            >
               Cancel
             </Button>
-            <Button onClick={handleCreateFolder} className="bg-[#faffc7] text-black hover:bg-[#f4f8cd]">
+            <Button
+              onClick={handleCreateFolder}
+              className="bg-[#faffc7] text-black hover:bg-[#f4f8cd]"
+            >
               Create
             </Button>
           </DialogFooter>
@@ -1398,35 +1601,36 @@ export default function DashboardPage() {
             <div className="flex items-center gap-2 text-sm">
               <span className="text-muted-foreground">Current location</span>
               <span className="text-foreground font-medium">
-                {workflowToMove?.folderId 
-                  ? allFolders.find(f => f.id === workflowToMove.folderId)?.name || 'Unknown'
+                {workflowToMove?.folderId
+                  ? allFolders.find((f) => f.id === workflowToMove.folderId)
+                      ?.name || 'Unknown'
                   : 'My Files'}
               </span>
             </div>
-            
+
             <div className="border-t border-border pt-4">
               <div className="flex items-center gap-2 text-sm mb-2">
                 <span className="text-muted-foreground">Dashboard</span>
                 <ChevronRight className="h-4 w-4 text-muted-foreground" />
                 <span className="text-foreground font-medium">My Files</span>
               </div>
-              
+
               <div className="space-y-1 max-h-[200px] overflow-y-auto">
                 {/* Root folder option */}
                 <button
                   type="button"
                   onClick={() => setSelectedMoveTarget(null)}
                   className={cn(
-                    "w-full px-3 py-2 text-left text-sm rounded-md transition-colors flex items-center gap-2",
-                    selectedMoveTarget === null 
-                      ? "bg-primary/20 text-foreground" 
-                      : "hover:bg-muted/30 text-muted-foreground"
+                    'w-full px-3 py-2 text-left text-sm rounded-md transition-colors flex items-center gap-2',
+                    selectedMoveTarget === null
+                      ? 'bg-primary/20 text-foreground'
+                      : 'hover:bg-muted/30 text-muted-foreground'
                   )}
                 >
                   <FolderIcon className="h-4 w-4" />
                   My Files (root)
                 </button>
-                
+
                 {/* Available folders */}
                 {allFolders.map((folder) => (
                   <button
@@ -1434,10 +1638,10 @@ export default function DashboardPage() {
                     type="button"
                     onClick={() => setSelectedMoveTarget(folder.id)}
                     className={cn(
-                      "w-full px-3 py-2 text-left text-sm rounded-md transition-colors flex items-center gap-2",
-                      selectedMoveTarget === folder.id 
-                        ? "bg-primary/20 text-foreground" 
-                        : "hover:bg-muted/30 text-foreground"
+                      'w-full px-3 py-2 text-left text-sm rounded-md transition-colors flex items-center gap-2',
+                      selectedMoveTarget === folder.id
+                        ? 'bg-primary/20 text-foreground'
+                        : 'hover:bg-muted/30 text-foreground'
                     )}
                   >
                     <FolderIcon className="h-4 w-4" />
@@ -1451,9 +1655,11 @@ export default function DashboardPage() {
             <Button variant="outline" onClick={() => setMoveDialogOpen(false)}>
               Cancel
             </Button>
-            <Button 
-              onClick={handleMoveWorkflow} 
-              disabled={selectedMoveTarget === (workflowToMove?.folderId || null)}
+            <Button
+              onClick={handleMoveWorkflow}
+              disabled={
+                selectedMoveTarget === (workflowToMove?.folderId || null)
+              }
               className="bg-zinc-800 text-white hover:bg-zinc-700 disabled:opacity-50"
             >
               Move
@@ -1462,5 +1668,19 @@ export default function DashboardPage() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <React.Suspense
+      fallback={
+        <div className="min-h-screen bg-background p-6 text-foreground">
+          Loading...
+        </div>
+      }
+    >
+      <DashboardPageContent />
+    </React.Suspense>
   );
 }
