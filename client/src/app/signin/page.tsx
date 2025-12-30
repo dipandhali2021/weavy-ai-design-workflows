@@ -34,7 +34,12 @@ declare global {
   }
 }
 
-const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '737286057515-0m14h8fsn0g8fglab18sbgqt7uqueasc.apps.googleusercontent.com';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+
+function getApiUrl(path: string): string | null {
+  if (!API_BASE_URL) return null;
+  return new URL(path, API_BASE_URL).toString();
+}
 
 export default function SignInPage() {
   const router = useRouter();
@@ -45,12 +50,18 @@ export default function SignInPage() {
       try {
         // Check for token using the correct auth utility
         const token = getStoredToken();
-        
+
+        const sessionUrl = getApiUrl('/auth/session');
+        if (!sessionUrl) {
+          console.error('NEXT_PUBLIC_API_URL is not configured');
+          return;
+        }
+
         if (token) {
           // Verify the token is valid by calling the session endpoint
-          const response = await fetch('http://localhost:4000/auth/session', {
+          const response = await fetch(sessionUrl, {
             headers: {
-              'Authorization': `Bearer ${token}`,
+              Authorization: `Bearer ${token}`,
             },
             credentials: 'include',
           });
@@ -71,7 +82,13 @@ export default function SignInPage() {
 
   // Redirect to backend OAuth flow
   const handleGoogleSignIn = () => {
-    window.location.href = 'http://localhost:4000/auth/google';
+    const googleUrl = getApiUrl('/auth/google');
+    if (!googleUrl) {
+      console.error('NEXT_PUBLIC_API_URL is not configured');
+      return;
+    }
+
+    window.location.href = googleUrl;
   };
 
   return (
