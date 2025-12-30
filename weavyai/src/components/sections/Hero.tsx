@@ -13,11 +13,12 @@ import {
   EdgeProps,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { ImageNode, TextNode } from './HeroNodes';
+import { ImageNode, TextNode, VideoNode } from './HeroNodes';
 
 const nodeTypes = {
   imageNode: ImageNode,
   textNode: TextNode,
+  videoNode: VideoNode,
 };
 
 const initialNodes = [
@@ -84,13 +85,12 @@ const initialNodes = [
   },
   {
     id: '6',
-    type: 'imageNode',
+    type: 'videoNode',
     position: { x: 1200, y: 680 },
     data: {
       label: 'MINIMAX VIDEO',
       sublabel: 'VIDEO',
-      image:
-        'https://cdn.prod.website-files.com/681b040781d5b5e278a69989/681cd7cbc22419b32bb9d8d8_hcard%20-%20STABLE%20DIFFUSION.avif',
+      video: 'https://assets.weavy.ai/homepage/hero/hero_video.mp4',
       width: 280,
       height: 420,
     },

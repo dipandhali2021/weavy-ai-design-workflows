@@ -1,6 +1,9 @@
 'use client';
 
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { FcGoogle } from 'react-icons/fc';
+import { getStoredToken } from '@/lib/auth';
 
 declare global {
   interface Window {
@@ -34,6 +37,38 @@ declare global {
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '737286057515-0m14h8fsn0g8fglab18sbgqt7uqueasc.apps.googleusercontent.com';
 
 export default function SignInPage() {
+  const router = useRouter();
+
+  // Check if user is already authenticated
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        // Check for token using the correct auth utility
+        const token = getStoredToken();
+        
+        if (token) {
+          // Verify the token is valid by calling the session endpoint
+          const response = await fetch('http://localhost:4000/auth/session', {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            },
+            credentials: 'include',
+          });
+
+          if (response.ok) {
+            // User is authenticated, redirect to dashboard
+            router.push('/dashboard');
+            return;
+          }
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error);
+      }
+    };
+
+    checkAuth();
+  }, [router]);
+
   // Redirect to backend OAuth flow
   const handleGoogleSignIn = () => {
     window.location.href = 'http://localhost:4000/auth/google';

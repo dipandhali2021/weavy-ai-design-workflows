@@ -5,18 +5,28 @@ import Link from 'next/link';
 
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
+  const [footerVisible, setFooterVisible] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 50);
     };
 
+    const handleFooterVisibility = (e: CustomEvent<{ isVisible: boolean }>) => {
+      setFooterVisible(e.detail.isVisible);
+    };
+
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener('footer-visibility', handleFooterVisibility as EventListener);
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('footer-visibility', handleFooterVisibility as EventListener);
+    };
   }, []);
 
   return (
-    <div className="navbar_main flex flex-col w-full fixed top-0 left-0 z-[1000] bg-transparent">
+    <div className={`navbar_main flex flex-col w-full fixed top-0 left-0 z-[1000] bg-transparent transition-all duration-500 ${footerVisible ? 'opacity-0 -translate-y-full pointer-events-none' : 'opacity-100 translate-y-0'}`}>
       {/* Announcement Banner */}
       <section className="w-full h-[49px] bg-[#0E0E13] flex items-center justify-center overflow-hidden">
         <div className="px-[2%] w-full flex justify-center">

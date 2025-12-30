@@ -28,23 +28,38 @@ passport.use(
                     return done(new Error('No email found in Google profile'), undefined);
                 }
 
-                // Find or create user
-                let user = await User.findOne({ googleId: profile.id });
+                // Use findOneAndUpdate with upsert for atomic operation
+                // This avoids race conditions and duplicate key errors
+                const user = await User.findOneAndUpdate(
+                    {
+                        $or: [
+                            { googleId: profile.id },
+                            { email: email.toLowerCase() }
+                        ]
+                    },
+                    {
+                        $set: {
+                            googleId: profile.id,
+                            email: email.toLowerCase(),
+                            name: profile.displayName || email.split('@')[0],
+                            avatar: avatar || '',
+                        },
+                        $setOnInsert: {
+                            createdAt: new Date(),
+                        }
+                    },
+                    {
+                        upsert: true,
+                        new: true,
+                        runValidators: true
+                    }
+                );
 
                 if (!user) {
-                    user = await User.create({
-                        googleId: profile.id,
-                        email,
-                        name: profile.displayName || email.split('@')[0],
-                        avatar: avatar || '',
-                    });
-                    console.log('✅ New user created:', user.email);
-                } else {
-                    // Update user info if changed
-                    user.name = profile.displayName || user.name;
-                    user.avatar = avatar || user.avatar;
-                    await user.save();
+                    return done(new Error('Failed to create or find user'), undefined);
                 }
+
+                console.log('✅ User authenticated:', user.email);
 
                 // Return session payload compatible object for Express.User
                 const sessionUser: Express.User = {

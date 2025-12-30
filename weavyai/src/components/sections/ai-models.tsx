@@ -98,8 +98,6 @@ export default function AIModelsSection() {
       const sectionHeight = rect.height;
       const scrollPos = -rect.top;
 
-      // Calculate how many "steps" we've scrolled through
-      // The section is about 500vh tall to allow for the scroll transitions
       const progress = Math.max(
         0,
         Math.min(1, scrollPos / (sectionHeight - window.innerHeight))
@@ -119,14 +117,14 @@ export default function AIModelsSection() {
   return (
     <section
       ref={containerRef}
-      className="relative w-full text-white"
+      className="relative w-full"
       style={{ height: '400vh' }}
     >
       {/* Sticky Background & Content Container */}
       <div className="sticky top-0 h-screen w-full overflow-hidden">
         {/* Dynamic Background Layer */}
         <div className="absolute inset-0 z-0">
-          <div className="absolute inset-0 bg-black/40 z-10" />
+          <div className="absolute inset-0 bg-black/30 z-10" />
           {MODELS.map((model, idx) => (
             <div
               key={idx}
@@ -164,51 +162,74 @@ export default function AIModelsSection() {
           ))}
         </div>
 
-        {/* Top & Bottom Gradient Overlays for smooth entry/exit */}
-        <div className="absolute top-0 left-0 w-full h-[30vh] bg-linear-to-b from-[#F1F3F2] to-transparent z-20 pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-full h-[30vh] bg-linear-to-t from-background to-transparent z-20 pointer-events-none" />
+        {/* Top & Bottom Gradient Overlays */}
+        <div 
+          className="absolute top-0 left-0 w-full h-[25vh] z-20 pointer-events-none"
+          style={{ background: 'linear-gradient(to bottom, #0a1a1a, transparent)' }}
+        />
+        <div 
+          className="absolute bottom-0 left-0 w-full h-[35vh] z-20 pointer-events-none"
+          style={{ background: 'linear-gradient(to top, #4a7c7c, transparent)' }}
+        />
 
         {/* Content Overlay */}
-        <div className="relative z-30 container mx-auto px-10 h-full flex flex-col md:flex-row items-center justify-between pointer-events-none">
+        <div className="relative z-30 h-full w-full flex">
           {/* Left Text Content */}
-          <div className="w-full md:w-1/2 mt-[10vh] md:mt-0">
+          <div className="w-[40%] h-full flex flex-col justify-center pl-12 md:pl-20">
             <h2
-              className="text-[2.5rem] md:text-[4.5rem] font-medium leading-[1.1] tracking-[-0.02em] mb-6"
+              className="text-white font-light leading-[0.95] tracking-[-0.03em] mb-6"
               style={{
-                fontSize: 'clamp(2.5rem, 5vw, 4.5rem)',
+                fontSize: 'clamp(3rem, 6vw, 5rem)',
+                fontFamily: "'Inter', -apple-system, sans-serif",
               }}
             >
-              Use all AI models, together at last
+              Use all AI<br />
+              models,<br />
+              together at<br />
+              last
             </h2>
-            <p className="max-w-[400px] text-lg md:text-xl opacity-90 leading-normal">
-              AI models and professional editing tools in one node-based
-              platform. Turn creative vision into scalable workflows without
-              compromising quality.
+            <p 
+              className="max-w-[320px] text-white/70 leading-relaxed"
+              style={{
+                fontSize: '0.875rem',
+                fontFamily: "'Inter', -apple-system, sans-serif",
+              }}
+            >
+              AI models and professional editing tools in one node-based platform. Turn creative vision into scalable workflows without compromising quality.
             </p>
           </div>
 
           {/* Right Scrolling List of Model Names */}
-          <div className="w-full md:w-1/2 flex justify-end items-center h-full overflow-hidden">
-            <div className="relative h-[200px] w-full flex flex-col items-end md:items-end justify-center">
-              {/* This inner div moves based on activeIndex to keep the current model centered */}
+          <div className="w-[55%] h-full flex items-center justify-start overflow-hidden">
+            <div className="relative h-auto w-full">
+              {/* This inner div moves based on activeIndex */}
               <div
-                className="transition-transform duration-700 ease-out flex flex-col items-end"
-                style={{ transform: `translateY(${-activeIndex * 64 + 32}px)` }}
+                className="transition-transform duration-700 ease-out flex flex-col"
+                style={{ 
+                  transform: `translateY(calc(50vh - ${activeIndex * 58}px - 180px))`,
+                }}
               >
                 {MODELS.map((model, idx) => (
                   <div
                     key={idx}
-                    className={`h-16 flex items-center transition-all duration-500 whitespace-nowrap ${
+                    className={`flex items-center transition-all duration-500 whitespace-nowrap ${
                       activeIndex === idx
-                        ? 'text-lime scale-110 opacity-100'
-                        : 'text-white/30 scale-100 opacity-100'
+                        ? 'text-[#f7ff9e]'
+                        : 'opacity-40'
                     }`}
                   >
-                    <h3
-                      className={`text-[2rem] md:text-[3.5rem] font-medium tracking-tighter uppercase font-sans`}
+                    <span
+                      className="tracking-[-0.02em]"
+                      style={{
+                        fontSize: 'clamp(4rem, 5vw, 4rem)',
+                        fontFamily: "'General Sans', 'Inter', -apple-system, sans-serif",
+                        fontWeight: 400,
+                        lineHeight: 1.15,
+                        color: activeIndex === idx ? '#f7ff9e' : 'rgba(255, 255, 255, 0.4)',
+                      }}
                     >
                       {model.name}
-                    </h3>
+                    </span>
                   </div>
                 ))}
               </div>

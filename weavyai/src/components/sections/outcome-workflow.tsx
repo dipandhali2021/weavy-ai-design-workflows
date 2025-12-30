@@ -1,6 +1,28 @@
+'use client';
+
 import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 
 const OutcomeWorkflowSection = () => {
+  const [scrollY, setScrollY] = useState(0);
+  const sectionRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (sectionRef.current) {
+        const rect = sectionRef.current.getBoundingClientRect();
+        const scrollProgress = -rect.top / window.innerHeight;
+        // Only update if near/in view to save perfs
+        if (rect.top < window.innerHeight && rect.bottom > 0) {
+          setScrollY(scrollProgress);
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   const workflows = [
     {
       title: 'Wan Lora - Rotate',
@@ -31,165 +53,103 @@ const OutcomeWorkflowSection = () => {
   return (
     <div className="w-full bg-[#F1F3F2]">
       {/* Control the Outcome Section */}
-      <section className="relative overflow-hidden blueprint-grid pt-40 pb-32">
-        <div className="container mx-auto px-[5%] text-center mb-20">
-          <h2 className="text-[clamp(2.5rem,5vw,4.5rem)] font-medium leading-[1] tracking-[-0.02em] text-black mb-6">
-            Control the Outcome
+      <section 
+        ref={sectionRef}
+        className="relative overflow-hidden pt-40 pb-32"
+        style={{
+          backgroundImage: `
+            linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px)
+          `,
+          backgroundSize: '20px 20px',
+        }}
+      >
+        <div className="container mx-auto px-[5%] text-center mb-16 relative z-10">
+          <h2 className="text-[clamp(3.5rem,6vw,5.5rem)] font-medium leading-[0.95] tracking-[-0.03em] text-black mb-6">
+            Control the<br />Outcome
           </h2>
-          <p className="max-w-[600px] mx-auto text-lg md:text-xl text-[#737373] leading-relaxed">
+          <p className="max-w-[500px] mx-auto text-lg text-[#737373] leading-relaxed">
             Layers, type, and blends—all the tools to bring your wildest ideas
             to life. Your creativity, our compositing power.
           </p>
         </div>
 
-        {/* High-fidelity Editor UI Mockup */}
-        <div className="container mx-auto px-[5%] relative z-10">
-          <div className="bg-[#1A1A1A] rounded-[24px] shadow-2xl overflow-hidden border border-white/10 aspect-[16/9] flex">
-            {/* Left Sidebar */}
-            <div className="w-[240px] border-r border-white/5 flex flex-col p-6 hidden md:flex">
-              <div className="text-white font-medium mb-8">Title sequence</div>
-              <div className="text-[10px] text-white/40 uppercase tracking-widest mb-4 font-mono">
-                Layers
-              </div>
-              <div className="space-y-3">
-                <div className="flex items-center gap-3 text-white/60 text-sm">
-                  <div className="w-4 h-4 bg-white/10 rounded-sm"></div>
-                  CANVAS
-                </div>
-                <div className="flex items-center gap-3 text-white/60 text-sm pl-4">
-                  <div className="w-4 h-4 border border-white/20"></div>
-                  WALKIE TALKIE
-                </div>
-                <div className="flex items-center gap-3 text-white text-sm pl-4 bg-white/5 -mx-6 px-6 py-2 border-l-2 border-[#EFFFF2]">
-                  <div className="w-4 h-4 border border-[#EFFFF2]"></div>
-                  TEXT LAYER
-                </div>
-                <div className="flex items-center gap-3 text-white/60 text-sm pl-4">
-                  <div className="w-4 h-4 border border-white/20"></div>
-                  ASTRONAUT
-                </div>
-              </div>
-            </div>
+        {/* Parallax Composition */}
+        <div className="container mx-auto px-[5%] relative z-10 min-h-[600px] md:min-h-[800px] flex items-center justify-center perspective-1000">
+          <div className="relative w-full max-w-[1200px] aspect-[16/9] md:aspect-[2/1]">
+            
+            {/* Main Background UI */}
+            <img 
+              src="https://cdn.prod.website-files.com/681b040781d5b5e278a69989/682ee0eea4106dbd4133065d_Weavy%20UI.avif" 
+              alt="Weavy UI Interface" 
+              className="absolute inset-0 w-full h-auto object-contain z-10"
+              style={{
+                transform: `scale(${1 + scrollY * 0.05})`,
+                transition: 'transform 0.1s ease-out',
+                willChange: 'transform'
+              }}
+            />
 
-            {/* Canvas Area */}
-            <div className="flex-1 bg-[#141414] relative flex items-center justify-center p-8 overflow-hidden">
-              {/* Grid Pattern in Canvas */}
-              <div
-                className="absolute inset-0 opacity-10"
+            {/* Inner Parallax Container */}
+            <div className="absolute inset-0 z-20 flex items-center justify-center">
+              
+              {/* Spaceship (Background) */}
+              <img 
+                src="https://cdn.prod.website-files.com/681b040781d5b5e278a69989/682ee1e4abc8a6ba31b611d5_spaceship.avif"
+                alt="Spaceship"
+                className="absolute w-[65%] h-auto object-contain"
                 style={{
-                  backgroundImage:
-                    'radial-gradient(circle, #fff 1px, transparent 1px)',
-                  backgroundSize: '24px 24px',
+                  transform: `translate3d(${-0.5 + scrollY * 2}%, ${-0.16 + scrollY * 5}%, 0) scale(1)`,
+                  transition: 'transform 0.1s ease-out',
+                  left: '18%',
+                  top: '10%',
+                  willChange: 'transform'
                 }}
-              ></div>
-              <div className="relative w-full h-full rounded-xl overflow-hidden shadow-inner">
-                <img
-                  src="https://cdn.prod.website-files.com/681b040781d5b5e278a69989/6836e7885ff7357d922037c4_default_mobile.avif"
-                  alt="Editor Canvas Content"
-                  className="w-full h-full object-cover opacity-80"
-                />
-                {/* Focus Rect */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 border border-[#EFFFF2] p-4 text-[#EFFFF2] font-mono text-center">
-                  <div className="mb-2 text-[10px]">Directed by</div>
-                  <div className="text-2xl md:text-3xl font-medium">
-                    Michael Abernathy
-                  </div>
-                  {/* Measurement Lines */}
-                  <div className="absolute -top-6 left-0 right-0 h-px bg-[#EFFFF2]/40 flex justify-center items-center">
-                    <span className="bg-[#1A1A1A] px-1 text-[8px]">1024</span>
-                  </div>
-                </div>
-              </div>
+              />
+
+              {/* Astro Image (Main Subject) */}
+              <img 
+                src="https://cdn.prod.website-files.com/681b040781d5b5e278a69989/682ee1e4018d126165811a7b_Astro.avif"
+                alt="Astronaut"
+                className="absolute w-[66%] h-auto object-contain"
+                style={{
+                  transform: `translate3d(${-3 + scrollY * -5}%, ${1.3 + scrollY * -2}%, 0) rotateZ(-1deg)`,
+                  transition: 'transform 0.1s ease-out',
+                  left: '17%',
+                  top: '12%',
+                  willChange: 'transform'
+                }}
+              />
+
+              {/* Text Layer (Floating) */}
+              <img 
+                src="https://cdn.prod.website-files.com/681b040781d5b5e278a69989/682ee1e3553ccb7b1eac8758_text%20-%20in%20astro.svg"
+                alt="Text Layer"
+                className="absolute w-[30%] h-auto object-contain"
+                style={{
+                  transform: `translate3d(${-11 + scrollY * -15}%, ${20 + scrollY * -10}%, 0)`,
+                  transition: 'transform 0.1s ease-out',
+                  left: '35%', 
+                  top: '45%',
+                  willChange: 'transform'
+                }}
+              />
+
+              {/* Phone Image (Foreground) */}
+              <img 
+                src="https://cdn.prod.website-files.com/681b040781d5b5e278a69989/682eecb4b45672741cafa0f6_phone.avif"
+                alt="Phone Interface"
+                className="absolute w-[18%] h-auto object-contain"
+                style={{
+                  transform: `translate3d(${-19 + scrollY * -25}%, ${5.7 + scrollY * -8}%, 0)`,
+                  transition: 'transform 0.1s ease-out',
+                  left: '15%',
+                  top: '25%',
+                  willChange: 'transform'
+                }}
+              />
+
             </div>
-
-            {/* Right Properties Panel */}
-            <div className="w-[300px] border-l border-white/5 bg-[#1A1A1A] p-6 hidden lg:block">
-              <div className="flex items-center gap-2 text-white font-medium mb-8">
-                <span className="text-[#EFFFF2]">T</span> TEXT LAYER
-              </div>
-
-              <div className="space-y-6">
-                <div>
-                  <div className="text-[10px] text-white/40 uppercase tracking-widest mb-3 font-mono">
-                    Dimensions
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-[#262626] rounded-md p-2 flex items-center gap-2 border border-white/5">
-                      <span className="text-white/30 font-mono text-[10px]">
-                        W
-                      </span>
-                      <span className="text-white text-xs font-mono">1024</span>
-                    </div>
-                    <div className="bg-[#262626] rounded-md p-2 flex items-center gap-2 border border-white/5">
-                      <span className="text-white/30 font-mono text-[10px]">
-                        H
-                      </span>
-                      <span className="text-white text-xs font-mono">1240</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <div className="text-[10px] text-white/40 uppercase tracking-widest mb-3 font-mono">
-                    Position
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-[#262626] rounded-md p-2 flex items-center gap-2 border border-white/5">
-                      <span className="text-white/30 font-mono text-[10px]">
-                        X
-                      </span>
-                      <span className="text-white text-xs font-mono">240</span>
-                    </div>
-                    <div className="bg-[#262626] rounded-md p-2 flex items-center gap-2 border border-white/5">
-                      <span className="text-white/30 font-mono text-[10px]">
-                        Y
-                      </span>
-                      <span className="text-white text-xs font-mono">724</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <div className="text-[10px] text-white/40 uppercase tracking-widest mb-3 font-mono">
-                    Blending
-                  </div>
-                  <div className="bg-[#262626] rounded-md p-3 flex items-center justify-between border border-white/5">
-                    <span className="text-white text-xs">NORMAL</span>
-                    <span className="text-white/40">▼</span>
-                  </div>
-                </div>
-
-                <div>
-                  <div className="text-[10px] text-white/40 uppercase tracking-widest mb-3 font-mono">
-                    Font
-                  </div>
-                  <div className="bg-[#262626] rounded-md p-3 flex items-center justify-between border border-white/10 ring-1 ring-[#EFFFF2]/20">
-                    <span className="text-white text-xs font-mono">
-                      JETBRAINS MONO
-                    </span>
-                    <span className="text-white/40">▼</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Transition Tag */}
-        <div className="container mx-auto px-[5%] mt-20 flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16">
-          <div className="flex items-center gap-4">
-            <span className="text-[12px] font-mono uppercase tracking-widest text-[#737373]">
-              From
-            </span>
-            <span className="text-xl md:text-2xl font-medium italic">
-              Workflow
-            </span>
-          </div>
-          <div className="flex items-center gap-4">
-            <span className="text-[12px] font-mono uppercase tracking-widest text-[#737373]">
-              to
-            </span>
-            <span className="text-xl md:text-2xl font-medium">App Mode</span>
           </div>
         </div>
       </section>
