@@ -19,19 +19,19 @@ export const productListingWorkflow = {
             id: 'img-1',
             type: 'image',
             position: { x: 50, y: 50 },
-            data: {},
+            data: { images: [], currentIndex: 0, viewMode: 'single' },
         },
         {
             id: 'img-2',
             type: 'image',
             position: { x: 50, y: 280 },
-            data: {},
+            data: { images: [], currentIndex: 0, viewMode: 'single' },
         },
         {
             id: 'img-3',
             type: 'image',
             position: { x: 50, y: 510 },
-            data: {},
+            data: { images: [], currentIndex: 0, viewMode: 'single' },
         },
         // System Prompt
         {

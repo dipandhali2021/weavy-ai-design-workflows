@@ -9,11 +9,19 @@ export interface TextNodeData {
     text: string;
 }
 
+export interface ImageItem {
+    imageUrl: string;
+    imageBase64: string;
+    fileName: string;
+    width?: number;
+    height?: number;
+}
+
 export interface ImageNodeData {
     [key: string]: unknown;
-    imageUrl?: string;
-    imageBase64?: string;
-    fileName?: string;
+    images: ImageItem[];
+    currentIndex: number;
+    viewMode: 'single' | 'all';
 }
 
 export interface LLMNodeData {

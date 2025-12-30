@@ -86,7 +86,7 @@ const getDefaultNodeData = (type: 'text' | 'image' | 'llm'): TextNodeData | Imag
         case 'text':
             return { text: '' };
         case 'image':
-            return {};
+            return { images: [], currentIndex: 0, viewMode: 'single' as const };
         case 'llm':
             return { model: 'gemini-2.5-flash' as GeminiModel };
     }
@@ -365,8 +365,11 @@ export const useWorkflowStore = create<WorkflowState>()(
                     case 'images':
                         if (sourceNode.type === 'image') {
                             const imageData = sourceNode.data as ImageNodeData;
-                            if (imageData.imageBase64) {
-                                result.images.push(imageData.imageBase64);
+                            // Push all base64 images from the images array
+                            for (const img of imageData.images || []) {
+                                if (img.imageBase64) {
+                                    result.images.push(img.imageBase64);
+                                }
                             }
                         }
                         break;
