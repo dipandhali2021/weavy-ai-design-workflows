@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -14,10 +14,12 @@ import {
 } from '@/components/ui/table';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { cn } from '@/lib/utils';
-import { getIsAuthenticated } from '@/lib/auth';
+import { isAuthenticated, getStoredUser, setStoredToken, setStoredUser, clearAuth, type AuthUser } from '@/lib/auth';
+import { api } from '@/lib/api';
 import { BsDiscord } from 'react-icons/bs';
 import { PiUsers } from 'react-icons/pi';
 import { IoIosArrowBack, IoIosArrowForward } from 'react-icons/io';
+import { LogOut } from 'lucide-react';
 
 type ShowcaseItem = {
   title: string;
@@ -237,12 +239,65 @@ function FileCard({ item }: { item: FileItem }) {
 
 export default function DashboardPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [files, setFiles] = React.useState<FileItem[]>(fileItems);
+  const [user, setUser] = React.useState<AuthUser | null>(null);
+  const [isLoading, setIsLoading] = React.useState(true);
 
+  // Handle token from OAuth callback
   React.useEffect(() => {
-    if (!getIsAuthenticated()) router.replace('/signin');
+    const token = searchParams.get('token');
+    if (token) {
+      setStoredToken(token);
+      api.setToken(token);
+      // Remove token from URL
+      window.history.replaceState({}, '', '/dashboard');
+    }
+  }, [searchParams]);
+
+  // Check auth and fetch user
+  React.useEffect(() => {
+    const checkAuth = async () => {
+      // First check localStorage
+      const storedUser = getStoredUser();
+      if (storedUser) {
+        setUser(storedUser);
+      }
+
+      // Then verify with server
+      if (isAuthenticated() || api.getToken()) {
+        try {
+          const response = await api.getSession();
+          if (response.success && response.user) {
+            setUser(response.user as AuthUser);
+            setStoredUser(response.user as AuthUser);
+          } else {
+            // Server says invalid - clear and redirect
+            clearAuth();
+            router.replace('/signin');
+          }
+        } catch {
+          // If server is down, use cached user
+          if (!storedUser) {
+            clearAuth();
+            router.replace('/signin');
+          }
+        }
+      } else {
+        router.replace('/signin');
+      }
+      setIsLoading(false);
+    };
+
+    checkAuth();
   }, [router]);
+
+  const handleLogout = async () => {
+    await api.logout();
+    clearAuth();
+    router.replace('/signin');
+  };
 
   const handleCreateNewFile = React.useCallback(() => {
     setFiles((prev) => {
@@ -309,17 +364,25 @@ export default function DashboardPage() {
                 className="flex w-full items-center gap-3 rounded-md px-2 py-2 text-left cursor-pointer"
               >
                 <div className="h-8 w-8 overflow-hidden rounded-full bg-muted">
-                  <img
-                    alt="user.displayName"
-                    src="https://lh3.googleusercontent.com/a/ACg8ocKLQV0fwIA3-izVDIGno9D2HhJ_F5exZkmy3w3y1J6eJvw6sg=s96-c"
-                    className="h-full w-full object-cover"
-                  />
+                  {user?.avatar ? (
+                    <img
+                      alt={user.name}
+                      src={user.avatar}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="h-full w-full flex items-center justify-center bg-primary text-primary-foreground text-sm font-medium">
+                      {user?.name?.charAt(0) || 'U'}
+                    </div>
+                  )}
                 </div>
                 <span className="truncate text-[14px] font-medium">
-                  Methyl Blue
+                  {user?.name || 'Loading...'}
                 </span>
                 <CaretDown className="text-foreground/80" />
               </button>
+              
+              
 
               <Button
                 type="button"
@@ -368,6 +431,16 @@ export default function DashboardPage() {
             <div className="pt-3">
               <button
                 type="button"
+                onClick={handleLogout}
+                className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-foreground/80 hover:bg-card/60 hover:bg-red-200"
+              >
+                <span className="grid h-8 w-8 place-items-center">
+                  <LogOut className="h-5 w-5" />
+                </span>
+                <span className="text-[14px] font-medium">Logout</span>
+              </button>
+              <button
+                type="button"
                 className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-foreground/80 hover:bg-card/60 hover:text-foreground"
               >
                 <span className="grid h-8 w-8 place-items-center">
@@ -383,7 +456,7 @@ export default function DashboardPage() {
         <div className="min-w-0 px-4 py-7 sm:px-8">
           <header className="flex flex-wrap items-center justify-between gap-4">
             <span className="text-[14px] font-medium text-foreground/90">
-              Methyl Blue&apos;s Workspace
+              {user?.name ? `${user.name}'s Workspace` : 'Loading...'}
             </span>
             <Button
               type="button"

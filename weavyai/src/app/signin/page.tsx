@@ -1,24 +1,42 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { z } from 'zod';
 import { FcGoogle } from 'react-icons/fc';
-import { setIsAuthenticated } from '@/lib/auth';
 
-const googleSignInPayloadSchema = z.object({
-  provider: z.literal('google'),
-});
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        id: {
+          initialize: (config: {
+            client_id: string;
+            callback: (response: { credential: string }) => void;
+            auto_select?: boolean;
+          }) => void;
+          renderButton: (
+            element: HTMLElement | null,
+            config: {
+              theme?: 'outline' | 'filled_blue' | 'filled_black';
+              size?: 'large' | 'medium' | 'small';
+              type?: 'standard' | 'icon';
+              text?: 'signin_with' | 'signup_with' | 'continue_with' | 'signin';
+              shape?: 'rectangular' | 'pill' | 'circle' | 'square';
+              logo_alignment?: 'left' | 'center';
+              width?: number;
+            }
+          ) => void;
+          prompt: () => void;
+        };
+      };
+    };
+  }
+}
+
+const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '737286057515-0m14h8fsn0g8fglab18sbgqt7uqueasc.apps.googleusercontent.com';
 
 export default function SignInPage() {
-  const router = useRouter();
-
+  // Redirect to backend OAuth flow
   const handleGoogleSignIn = () => {
-    const parsed = googleSignInPayloadSchema.safeParse({ provider: 'google' });
-    if (!parsed.success) return;
-
-    setIsAuthenticated(true);
-
-    router.push('/dashboard');
+    window.location.href = 'http://localhost:4000/auth/google';
   };
 
   return (
@@ -67,11 +85,11 @@ export default function SignInPage() {
             <button
               type="button"
               onClick={handleGoogleSignIn}
-              className="flex h-12 w-full items-center justify-center gap-3 rounded-md border border-gray-300 bg-white transition-colors duration-200 hover:bg-[#d8d8d9]"
+              className="flex h-12 w-full items-center justify-center gap-3 rounded-lg border border-gray-200 bg-white shadow-sm transition-all duration-200 hover:bg-gray-50 hover:shadow-md active:scale-[0.98]"
             >
               <FcGoogle className="h-5 w-5" />
               <span className="text-[15px] font-medium text-gray-700">
-                Log in with Google
+                Continue with Google
               </span>
             </button>
           </div>

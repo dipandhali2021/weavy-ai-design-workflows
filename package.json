@@ -1,0 +1,11 @@
+{
+  "name": "weavy-ai-design-workflows",
+  "private": true,
+  "workspaces": [
+    "weavyai",
+    "server"
+  ],
+  "devDependencies": {
+    "tailwindcss": "^4.1.18"
+  }
+}
