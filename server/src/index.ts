@@ -10,6 +10,8 @@ dotenv.config();
 import { connectDatabase } from './config/database.js';
 import passport from './config/passport.js';
 import authRoutes from './routes/auth.js';
+import workflowRoutes from './routes/workflow.js';
+import folderRoutes from './routes/folder.js';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -61,6 +63,8 @@ app.get('/health', (req: Request, res: Response) => {
 
 // API routes
 app.use('/auth', authRoutes);
+app.use('/workflow', workflowRoutes);
+app.use('/folder', folderRoutes);
 
 // 404 handler
 app.use((req: Request, res: Response) => {

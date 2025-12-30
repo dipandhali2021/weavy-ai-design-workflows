@@ -645,8 +645,13 @@ function BuilderInner() {
   );
 }
 
-export function WorkflowBuilder() {
+interface WorkflowBuilderProps {
+  workflowId?: string;
+}
+
+export function WorkflowBuilder({ workflowId }: WorkflowBuilderProps) {
   // Scope dark theme to this surface (matches screenshot).
+  // TODO: Load workflow data from API using workflowId
   return (
     <div className="dark">
       <ReactFlowProvider>

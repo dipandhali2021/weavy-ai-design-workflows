@@ -14,6 +14,74 @@ export interface AuthResponse {
   message?: string;
 }
 
+export interface WorkflowNode {
+  id: string;
+  type: string;
+  position: { x: number; y: number };
+  data: Record<string, unknown>;
+}
+
+export interface WorkflowEdge {
+  id: string;
+  source: string;
+  target: string;
+  sourceHandle?: string;
+  targetHandle?: string;
+  type?: string;
+}
+
+export interface Workflow {
+  id: string;
+  name: string;
+  folderId?: string | null;
+  nodes?: WorkflowNode[];
+  edges?: WorkflowEdge[];
+  thumbnail?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Folder {
+  id: string;
+  name: string;
+  parentId: string | null;
+  fileCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface WorkflowListResponse {
+  success: boolean;
+  workflows?: Workflow[];
+  message?: string;
+}
+
+export interface WorkflowResponse {
+  success: boolean;
+  workflow?: Workflow;
+  message?: string;
+}
+
+export interface FolderListResponse {
+  success: boolean;
+  folders?: Folder[];
+  message?: string;
+}
+
+export interface FolderResponse {
+  success: boolean;
+  folder?: Folder;
+  message?: string;
+}
+
+export interface UpdateWorkflowData {
+  name?: string;
+  folderId?: string | null;
+  nodes?: WorkflowNode[];
+  edges?: WorkflowEdge[];
+  thumbnail?: string;
+}
+
 class ApiClient {
   private baseUrl: string;
   private token: string | null = null;
@@ -112,7 +180,76 @@ class ApiClient {
       return { success: true, message: 'Logged out locally' };
     }
   }
+
+  // Workflow endpoints
+  async getWorkflows(folderId?: string | null): Promise<WorkflowListResponse> {
+    const params = new URLSearchParams();
+    if (folderId !== undefined) {
+      params.set('folderId', folderId || '');
+    }
+    const query = params.toString() ? `?${params.toString()}` : '';
+    return this.request<WorkflowListResponse>(`/workflow${query}`);
+  }
+
+  async createWorkflow(name: string = 'untitled', folderId?: string | null): Promise<WorkflowResponse> {
+    return this.request<WorkflowResponse>('/workflow', {
+      method: 'POST',
+      body: JSON.stringify({ name, folderId }),
+    });
+  }
+
+  async getWorkflow(id: string): Promise<WorkflowResponse> {
+    return this.request<WorkflowResponse>(`/workflow/${id}`);
+  }
+
+  async updateWorkflow(id: string, data: UpdateWorkflowData): Promise<WorkflowResponse> {
+    return this.request<WorkflowResponse>(`/workflow/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteWorkflow(id: string): Promise<{ success: boolean; message?: string }> {
+    return this.request<{ success: boolean; message?: string }>(`/workflow/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // Folder endpoints
+  async getFolders(parentId?: string | null): Promise<FolderListResponse> {
+    const params = new URLSearchParams();
+    if (parentId) {
+      params.set('parentId', parentId);
+    }
+    const query = params.toString() ? `?${params.toString()}` : '';
+    return this.request<FolderListResponse>(`/folder${query}`);
+  }
+
+  async createFolder(name: string, parentId?: string | null): Promise<FolderResponse> {
+    return this.request<FolderResponse>('/folder', {
+      method: 'POST',
+      body: JSON.stringify({ name, parentId }),
+    });
+  }
+
+  async getFolder(id: string): Promise<FolderResponse> {
+    return this.request<FolderResponse>(`/folder/${id}`);
+  }
+
+  async updateFolder(id: string, name: string): Promise<FolderResponse> {
+    return this.request<FolderResponse>(`/folder/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ name }),
+    });
+  }
+
+  async deleteFolder(id: string): Promise<{ success: boolean; message?: string }> {
+    return this.request<{ success: boolean; message?: string }>(`/folder/${id}`, {
+      method: 'DELETE',
+    });
+  }
 }
 
 export const api = new ApiClient(API_URL);
 export default api;
+
