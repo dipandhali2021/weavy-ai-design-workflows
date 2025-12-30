@@ -361,6 +361,120 @@ function FileCard({
   );
 }
 
+function FolderCard({ 
+  folder, 
+  onOpen,
+  onRename, 
+  onDelete, 
+  onMove,
+}: { 
+  folder: Folder; 
+  onOpen: (folder: Folder) => void;
+  onRename: (id: string, newName: string) => void;
+  onDelete: (id: string) => void;
+  onMove: (folder: Folder) => void;
+}) {
+  const [renameDialogOpen, setRenameDialogOpen] = React.useState(false);
+  const [newName, setNewName] = React.useState(folder.name);
+
+  const handleOpen = () => {
+    onOpen(folder);
+  };
+
+  const handleOpenNewTab = () => {
+    window.open(`/dashboard?folderId=${folder.id}`, '_blank');
+  };
+
+  const handleRename = () => {
+    if (newName.trim() && newName !== folder.name) {
+      onRename(folder.id, newName.trim());
+    }
+    setRenameDialogOpen(false);
+  };
+
+  return (
+    <>
+      <ContextMenu>
+        <ContextMenuTrigger asChild>
+          <button
+            type="button"
+            onClick={handleOpen}
+            className="group space-y-2 text-left"
+          >
+            <div className="flex h-[220px] w-full items-center justify-center rounded-md border border-border bg-card shadow-xs transition-colors hover:border-foreground/30">
+              <img 
+                src="https://app.weavy.ai/icons/folder.svg" 
+                alt="folder" 
+                className="h-16 w-16 opacity-80 invert"
+              />
+            </div>
+            <div>
+              <div className="text-[16px] font-medium text-foreground">{folder.name}</div>
+              <div className="text-[14px] text-muted-foreground">{folder.fileCount} Files</div>
+            </div>
+          </button>
+        </ContextMenuTrigger>
+        <ContextMenuContent className="w-48 bg-card border-border">
+          <ContextMenuItem onClick={handleOpen} className="cursor-pointer">
+            Open
+          </ContextMenuItem>
+          <ContextMenuItem onClick={handleOpenNewTab} className="cursor-pointer">
+            Open in a new tab
+          </ContextMenuItem>
+          <ContextMenuSeparator />
+          <ContextMenuItem onClick={() => {
+            setNewName(folder.name);
+            setRenameDialogOpen(true);
+          }} className="cursor-pointer">
+            Rename
+          </ContextMenuItem>
+          <ContextMenuItem onClick={() => onMove(folder)} className="cursor-pointer">
+            Move
+          </ContextMenuItem>
+          <ContextMenuSeparator />
+          <ContextMenuItem 
+            onClick={() => onDelete(folder.id)} 
+            className="cursor-pointer text-red-500 focus:text-red-500"
+          >
+            Delete
+          </ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>
+
+      <Dialog open={renameDialogOpen} onOpenChange={setRenameDialogOpen}>
+        <DialogContent className="sm:max-w-[400px] bg-card border-border">
+          <DialogHeader>
+            <DialogTitle>Rename folder</DialogTitle>
+            <DialogDescription>
+              Enter a new name for your folder.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <Input
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              placeholder="Folder name"
+              className="w-full"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleRename();
+              }}
+              autoFocus
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRenameDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleRename} className="bg-[#faffc7] text-black hover:bg-[#f4f8cd]">
+              Rename
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
 export default function DashboardPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -375,11 +489,27 @@ export default function DashboardPage() {
   const [createFolderDialogOpen, setCreateFolderDialogOpen] = React.useState(false);
   const [newFolderName, setNewFolderName] = React.useState('');
   
+  // Search state
+  const [searchQuery, setSearchQuery] = React.useState('');
+  
   // Move dialog state
   const [moveDialogOpen, setMoveDialogOpen] = React.useState(false);
   const [workflowToMove, setWorkflowToMove] = React.useState<Workflow | null>(null);
   const [allFolders, setAllFolders] = React.useState<Folder[]>([]);
   const [selectedMoveTarget, setSelectedMoveTarget] = React.useState<string | null>(null);
+
+  // Filtered folders and workflows based on search query
+  const filteredFolders = React.useMemo(() => {
+    if (!searchQuery.trim()) return folders;
+    const query = searchQuery.toLowerCase();
+    return folders.filter(folder => folder.name.toLowerCase().includes(query));
+  }, [folders, searchQuery]);
+
+  const filteredWorkflows = React.useMemo(() => {
+    if (!searchQuery.trim()) return workflows;
+    const query = searchQuery.toLowerCase();
+    return workflows.filter(workflow => workflow.name.toLowerCase().includes(query));
+  }, [workflows, searchQuery]);
 
   // Handle token from OAuth callback
   React.useEffect(() => {
@@ -552,6 +682,47 @@ export default function DashboardPage() {
       console.error('Failed to create folder:', error);
     }
   }, [newFolderName, currentFolderId]);
+
+  // Folder rename handler
+  const handleRenameFolder = React.useCallback(async (id: string, newName: string) => {
+    try {
+      const response = await api.updateFolder(id, newName);
+      if (response.success && response.folder) {
+        setFolders(prev => 
+          prev.map(f => f.id === id ? { ...f, name: newName } : f)
+        );
+        // Update breadcrumbs if renaming current folder
+        setBreadcrumbs(prev => 
+          prev.map(b => b.id === id ? { ...b, name: newName } : b)
+        );
+      }
+    } catch (error) {
+      console.error('Failed to rename folder:', error);
+    }
+  }, []);
+
+  // Folder delete handler
+  const handleDeleteFolder = React.useCallback(async (id: string) => {
+    try {
+      const response = await api.deleteFolder(id);
+      if (response.success) {
+        setFolders(prev => prev.filter(f => f.id !== id));
+      }
+    } catch (error) {
+      console.error('Failed to delete folder:', error);
+    }
+  }, []);
+
+  // Open folder
+  const handleOpenFolder = React.useCallback((folder: Folder) => {
+    handleNavigateToFolder(folder.id, folder.name);
+  }, [handleNavigateToFolder]);
+
+  // Move folder dialog (placeholder - same structure as workflow move)
+  const handleMoveFolder = React.useCallback((folder: Folder) => {
+    // For now, just log - could implement folder move dialog similar to workflow
+    console.log('Move folder:', folder);
+  }, []);
 
   // Open move dialog
   const openMoveDialog = React.useCallback(async (workflow: Workflow) => {
@@ -885,6 +1056,8 @@ export default function DashboardPage() {
                     <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-foreground/70" />
                     <Input
                       placeholder="Search"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
                       className="h-10 rounded-md border-border bg-background/40 pl-10 text-[14px]"
                     />
                   </div>
@@ -928,7 +1101,7 @@ export default function DashboardPage() {
 
               {filesView === 'grid' ? (
                 <div className="mt-6">
-                  {folders.length === 0 && workflows.length === 0 ? (
+                  {filteredFolders.length === 0 && filteredWorkflows.length === 0 ? (
                     /* Empty state */
                     <div className="flex flex-col items-center justify-center py-20 text-center">
                       <div className="mb-4 rounded-lg border border-border bg-card/40 p-4">
@@ -944,28 +1117,18 @@ export default function DashboardPage() {
                   ) : (
                     <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
                       {/* Folder cards */}
-                      {folders.map((folder) => (
-                        <button
+                      {filteredFolders.map((folder) => (
+                        <FolderCard
                           key={folder.id}
-                          type="button"
-                          onClick={() => handleNavigateToFolder(folder.id, folder.name)}
-                          className="group space-y-2 text-left"
-                        >
-                          <div className="flex h-[220px] w-full items-center justify-center rounded-md border border-border bg-card shadow-xs transition-colors hover:border-foreground/30">
-                            <img 
-                              src="https://app.weavy.ai/icons/folder.svg" 
-                              alt="folder" 
-                              className="h-16 w-16 opacity-80 invert"
-                            />
-                          </div>
-                          <div>
-                            <div className="text-[16px] font-medium text-foreground">{folder.name}</div>
-                            <div className="text-[14px] text-muted-foreground">{folder.fileCount} Files</div>
-                          </div>
-                        </button>
+                          folder={folder}
+                          onOpen={handleOpenFolder}
+                          onRename={handleRenameFolder}
+                          onDelete={handleDeleteFolder}
+                          onMove={handleMoveFolder}
+                        />
                       ))}
                       {/* Workflow cards */}
-                      {workflows.map((workflow) => (
+                      {filteredWorkflows.map((workflow) => (
                         <FileCard 
                           key={workflow.id} 
                           workflow={workflow} 
@@ -980,7 +1143,7 @@ export default function DashboardPage() {
                 </div>
               ) : (
                 <div className="mt-6">
-                  {folders.length === 0 && workflows.length === 0 ? (
+                  {filteredFolders.length === 0 && filteredWorkflows.length === 0 ? (
                     /* Empty state for list view */
                     <div className="flex flex-col items-center justify-center py-20 text-center">
                       <div className="mb-4 rounded-lg border border-border bg-card/40 p-4">
@@ -1018,43 +1181,73 @@ export default function DashboardPage() {
 
                         <TableBody>
                           {/* Folder rows */}
-                          {folders.map((folder) => (
-                            <TableRow
-                              key={folder.id}
-                              className="group border-0 hover:bg-transparent cursor-pointer"
-                              onClick={() => handleNavigateToFolder(folder.id, folder.name)}
-                            >
-                              <TableCell className="rounded-l-md py-5 pl-4 pr-4 group-hover:bg-card/60">
-                                <div className="flex items-center gap-6">
-                                  <div className="flex h-[74px] w-[120px] items-center justify-center rounded-md bg-muted/20">
-                                    <img 
-                                      src="https://app.weavy.ai/icons/folder.svg" 
-                                      alt="folder" 
-                                      className="h-10 w-10 opacity-80 invert"
-                                    />
-                                  </div>
-                                  <div className="text-[16px] font-medium text-foreground">
-                                    {folder.name}
-                                  </div>
-                                </div>
-                              </TableCell>
+                          {filteredFolders.map((folder) => (
+                            <ContextMenu key={folder.id}>
+                              <ContextMenuTrigger asChild>
+                                <TableRow
+                                  className="group border-0 hover:bg-transparent cursor-pointer"
+                                  onClick={() => handleNavigateToFolder(folder.id, folder.name)}
+                                >
+                                  <TableCell className="rounded-l-md py-5 pl-4 pr-4 group-hover:bg-card/60">
+                                    <div className="flex items-center gap-6">
+                                      <div className="flex h-[74px] w-[120px] items-center justify-center rounded-md bg-muted/20">
+                                        <img 
+                                          src="https://app.weavy.ai/icons/folder.svg" 
+                                          alt="folder" 
+                                          className="h-10 w-10 opacity-80 invert"
+                                        />
+                                      </div>
+                                      <div className="text-[16px] font-medium text-foreground">
+                                        {folder.name}
+                                      </div>
+                                    </div>
+                                  </TableCell>
 
-                              <TableCell className="py-5 text-center text-foreground group-hover:bg-card/60">
-                                {folder.fileCount} Files
-                              </TableCell>
+                                  <TableCell className="py-5 text-center text-foreground group-hover:bg-card/60">
+                                    {folder.fileCount} Files
+                                  </TableCell>
 
-                              <TableCell className="py-5 text-center text-foreground group-hover:bg-card/60">
-                                {formatTimeAgo(folder.updatedAt)}
-                              </TableCell>
+                                  <TableCell className="py-5 text-center text-foreground group-hover:bg-card/60">
+                                    {formatTimeAgo(folder.updatedAt)}
+                                  </TableCell>
 
-                              <TableCell className="rounded-r-md py-5 text-center text-foreground group-hover:bg-card/60">
-                                {formatTimeAgo(folder.createdAt)}
-                              </TableCell>
-                            </TableRow>
+                                  <TableCell className="rounded-r-md py-5 text-center text-foreground group-hover:bg-card/60">
+                                    {formatTimeAgo(folder.createdAt)}
+                                  </TableCell>
+                                </TableRow>
+                              </ContextMenuTrigger>
+                              <ContextMenuContent className="w-48 bg-card border-border">
+                                <ContextMenuItem onClick={() => handleNavigateToFolder(folder.id, folder.name)} className="cursor-pointer">
+                                  Open
+                                </ContextMenuItem>
+                                <ContextMenuItem onClick={() => window.open(`/dashboard?folderId=${folder.id}`, '_blank')} className="cursor-pointer">
+                                  Open in a new tab
+                                </ContextMenuItem>
+                                <ContextMenuSeparator />
+                                <ContextMenuItem onClick={() => {
+                                  const newName = prompt('Enter new folder name:', folder.name);
+                                  if (newName && newName.trim()) {
+                                    handleRenameFolder(folder.id, newName.trim());
+                                  }
+                                }} className="cursor-pointer">
+                                  Rename
+                                </ContextMenuItem>
+                                <ContextMenuItem onClick={() => handleMoveFolder(folder)} className="cursor-pointer">
+                                  Move
+                                </ContextMenuItem>
+                                <ContextMenuSeparator />
+                                <ContextMenuItem 
+                                  onClick={() => handleDeleteFolder(folder.id)} 
+                                  className="cursor-pointer text-red-500 focus:text-red-500"
+                                >
+                                  Delete
+                                </ContextMenuItem>
+                              </ContextMenuContent>
+                            </ContextMenu>
                           ))}
                           
                           {/* Workflow rows */}
-                          {workflows.map((workflow) => (
+                          {filteredWorkflows.map((workflow) => (
                             <ContextMenu key={workflow.id}>
                               <ContextMenuTrigger asChild>
                                 <TableRow
@@ -1132,7 +1325,7 @@ export default function DashboardPage() {
 
                       <div className="mt-8 flex items-center justify-end gap-2 text-[14px] text-muted-foreground">
                         <span>
-                          1–{folders.length + workflows.length} of {folders.length + workflows.length}
+                          1–{filteredFolders.length + filteredWorkflows.length} of {filteredFolders.length + filteredWorkflows.length}
                         </span>
                         <Button
                           variant="ghost"

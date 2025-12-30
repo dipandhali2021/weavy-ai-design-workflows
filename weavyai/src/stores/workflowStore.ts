@@ -19,6 +19,7 @@ import type {
     GeminiModel,
     RunTask,
 } from '@/types/workflow.types';
+import api from '@/lib/api';
 
 // ============================================================================
 // Store Types
@@ -32,6 +33,8 @@ interface WorkflowState {
     workflowId: string | null;
     workflowName: string;
     isDirty: boolean;
+    isSaving: boolean;
+    isLoading: boolean;
 
     // Task tracking for running nodes
     runTasks: RunTask[];
@@ -70,6 +73,11 @@ interface WorkflowState {
     setWorkflowName: (name: string) => void;
     clearWorkflow: () => void;
     markClean: () => void;
+
+    // Actions - Backend sync
+    loadWorkflow: (id: string) => Promise<void>;
+    saveWorkflow: () => Promise<boolean>;
+    createAndSaveWorkflow: (name: string, nodes: WorkflowNode[], edges: WorkflowEdge[]) => Promise<string | null>;
 
     // Getters for connected node data
     getConnectedInputs: (nodeId: string) => {
@@ -116,6 +124,8 @@ export const useWorkflowStore = create<WorkflowState>()(
         workflowId: null,
         workflowName: 'untitled',
         isDirty: false,
+        isSaving: false,
+        isLoading: false,
         runTasks: [],
         undoStack: [],
         redoStack: [],
@@ -421,6 +431,110 @@ export const useWorkflowStore = create<WorkflowState>()(
 
         markClean: () => {
             set({ isDirty: false });
+        },
+
+        // Backend sync - Load workflow from API
+        loadWorkflow: async (id) => {
+            set({ isLoading: true });
+            try {
+                const response = await api.getWorkflow(id);
+                if (response.success && response.workflow) {
+                    const { workflow } = response;
+                    set({
+                        workflowId: workflow.id,
+                        workflowName: workflow.name,
+                        nodes: (workflow.nodes || []) as WorkflowNode[],
+                        edges: (workflow.edges || []) as WorkflowEdge[],
+                        undoStack: [],
+                        redoStack: [],
+                        isDirty: false,
+                        isLoading: false,
+                    });
+                } else {
+                    console.error('Failed to load workflow:', response.message);
+                    set({ isLoading: false });
+                }
+            } catch (error) {
+                console.error('Error loading workflow:', error);
+                set({ isLoading: false });
+            }
+        },
+
+        // Backend sync - Save workflow to API
+        saveWorkflow: async () => {
+            const state = get();
+            const { workflowId, workflowName, nodes, edges, isDirty } = state;
+
+            if (!workflowId || !isDirty) {
+                return true; // Nothing to save
+            }
+
+            set({ isSaving: true });
+            try {
+                const response = await api.updateWorkflow(workflowId, {
+                    name: workflowName,
+                    nodes: nodes as unknown as import('@/lib/api').WorkflowNode[],
+                    edges: edges as unknown as import('@/lib/api').WorkflowEdge[],
+                });
+
+                if (response.success) {
+                    set({ isDirty: false, isSaving: false });
+                    return true;
+                } else {
+                    console.error('Failed to save workflow:', response.message);
+                    set({ isSaving: false });
+                    return false;
+                }
+            } catch (error) {
+                console.error('Error saving workflow:', error);
+                set({ isSaving: false });
+                return false;
+            }
+        },
+
+        // Backend sync - Create new workflow and save to backend
+        createAndSaveWorkflow: async (name, nodes, edges) => {
+            set({ isSaving: true });
+            try {
+                // First create workflow to get an ID
+                const createResponse = await api.createWorkflow(name);
+
+                if (!createResponse.success || !createResponse.workflow) {
+                    console.error('Failed to create workflow:', createResponse.message);
+                    set({ isSaving: false });
+                    return null;
+                }
+
+                const workflowId = createResponse.workflow.id;
+
+                // Now update with the nodes and edges
+                const updateResponse = await api.updateWorkflow(workflowId, {
+                    nodes: nodes as unknown as import('@/lib/api').WorkflowNode[],
+                    edges: edges as unknown as import('@/lib/api').WorkflowEdge[],
+                });
+
+                if (updateResponse.success) {
+                    set({
+                        workflowId,
+                        workflowName: name,
+                        nodes,
+                        edges,
+                        undoStack: [],
+                        redoStack: [],
+                        isDirty: false,
+                        isSaving: false,
+                    });
+                    return workflowId;
+                } else {
+                    console.error('Failed to save workflow data:', updateResponse.message);
+                    set({ isSaving: false });
+                    return null;
+                }
+            } catch (error) {
+                console.error('Error creating workflow:', error);
+                set({ isSaving: false });
+                return null;
+            }
         },
 
         // Get connected inputs for LLM node

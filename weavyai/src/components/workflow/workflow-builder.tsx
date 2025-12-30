@@ -52,6 +52,7 @@ import { workflowNodeTypes, TextNode, ImageNode, LLMNode } from './nodes';
 import { useWorkflowStore, selectCanUndo, selectCanRedo } from '@/stores/workflowStore';
 import { simpleTestWorkflow, productListingWorkflow } from '@/lib/sampleWorkflows';
 import type { WorkflowNode, WorkflowEdge, RunTask } from '@/types/workflow.types';
+import Link from 'next/link';
 
 // ============================================================================
 // Quick Access Node Button
@@ -392,6 +393,8 @@ function BuilderInner() {
   const deleteSelectedNodes = useWorkflowStore((s) => s.deleteSelectedNodes);
   const workflowName = useWorkflowStore((s) => s.workflowName);
   const setWorkflowName = useWorkflowStore((s) => s.setWorkflowName);
+  const isSaving = useWorkflowStore((s) => s.isSaving);
+  const isDirty = useWorkflowStore((s) => s.isDirty);
 
   const [leftPanelOpen, setLeftPanelOpen] = React.useState(true);
   const [taskManagerOpen, setTaskManagerOpen] = React.useState(false);
@@ -486,17 +489,29 @@ function BuilderInner() {
   }, []);
 
   // Load sample workflow
-  const setWorkflow = useWorkflowStore((s) => s.setWorkflow);
+  const createAndSaveWorkflow = useWorkflowStore((s) => s.createAndSaveWorkflow);
   const handleLoadSample = React.useCallback(
-    (sample: 'simple' | 'product') => {
+    async (sample: 'simple' | 'product') => {
       const workflow = sample === 'simple' ? simpleTestWorkflow : productListingWorkflow;
-      setWorkflow(null, workflow.name, workflow.nodes as WorkflowNode[], workflow.edges as WorkflowEdge[]);
+      
+      // Create workflow in backend and set local state
+      const newId = await createAndSaveWorkflow(
+        workflow.name,
+        workflow.nodes as WorkflowNode[],
+        workflow.edges as WorkflowEdge[]
+      );
+
+      if (newId) {
+        // Update URL to reflect new workflow ID
+        window.history.replaceState(null, '', `/dashboard/workflow/${newId}`);
+      }
+
       // Fit view after loading
       setTimeout(() => {
         rf.fitView({ padding: 0.2, duration: 300 });
       }, 100);
     },
-    [rf, setWorkflow]
+    [rf, createAndSaveWorkflow]
   );
 
   // Keyboard shortcuts
@@ -589,6 +604,26 @@ function BuilderInner() {
                 </Button>
               </div>
 
+              {/* Save status indicator */}
+              <div className="mt-2 flex items-center gap-2 text-sm">
+                {isSaving ? (
+                  <span className="flex items-center gap-1 text-foreground/60">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    Saving...
+                  </span>
+                ) : !isDirty ? (
+                  <span className="flex items-center gap-1 text-green-500/80">
+                    <Check className="h-3 w-3" />
+                    Saved
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1 text-foreground/50">
+                    <span className="h-2 w-2 rounded-full bg-yellow-500" />
+                    Unsaved
+                  </span>
+                )}
+              </div>
+
               <div className="mt-2">
                 <button
                   type="button"
@@ -620,7 +655,7 @@ function BuilderInner() {
               id="main-toolbar-container"
               className="flex h-full flex-col border-r border-border bg-card"
             >
-              <div className="flex items-center justify-center gap-2 px-3 py-3">
+              <Link href={"/dashboard"} className="flex items-center justify-center gap-2 px-3 py-3 cursor-pointer">
                 <img
                   src="https://app.weavy.ai/icons/logo.svg"
                   alt="Logo"
@@ -628,7 +663,7 @@ function BuilderInner() {
                   className="invert"
                 />
                 <IconChevronDown className="text-foreground/70" />
-              </div>
+              </Link>
 
               <div className="flex flex-1 flex-col items-center gap-2 px-2 pt-2">
                 <button
@@ -645,7 +680,7 @@ function BuilderInner() {
                 </button>
               </div>
 
-              <div className="flex items-center justify-center gap-2 px-2 py-3">
+              <div className="flex flex-col items-center justify-center gap-2 px-2 py-3">
                 <button
                   type="button"
                   aria-label="Assets"
@@ -860,7 +895,37 @@ interface WorkflowBuilderProps {
 }
 
 export function WorkflowBuilder({ workflowId }: WorkflowBuilderProps) {
-  // TODO: Load workflow data from API using workflowId
+  const loadWorkflow = useWorkflowStore((s) => s.loadWorkflow);
+  const saveWorkflow = useWorkflowStore((s) => s.saveWorkflow);
+  const isDirty = useWorkflowStore((s) => s.isDirty);
+  const isLoading = useWorkflowStore((s) => s.isLoading);
+
+  // Load workflow on mount
+  React.useEffect(() => {
+    if (workflowId && workflowId !== 'new') {
+      loadWorkflow(workflowId);
+    }
+  }, [workflowId, loadWorkflow]);
+
+  // Autosave effect - debounced save when isDirty changes
+  React.useEffect(() => {
+    if (!isDirty || !workflowId || workflowId === 'new') return;
+
+    const timeoutId = setTimeout(() => {
+      saveWorkflow();
+    }, 2000); // 2 second debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [isDirty, workflowId, saveWorkflow]);
+
+  if (isLoading) {
+    return (
+      <div className="dark h-screen w-screen flex items-center justify-center bg-background">
+        <div className="text-foreground/60">Loading workflow...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="dark">
       <ReactFlowProvider>
