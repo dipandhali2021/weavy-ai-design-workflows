@@ -17,6 +17,7 @@ import type {
     ImageNodeData,
     LLMNodeData,
     GeminiModel,
+    RunTask,
 } from '@/types/workflow.types';
 
 // ============================================================================
@@ -31,6 +32,9 @@ interface WorkflowState {
     workflowId: string | null;
     workflowName: string;
     isDirty: boolean;
+
+    // Task tracking for running nodes
+    runTasks: RunTask[];
 
     // History for undo/redo
     undoStack: HistoryState[];
@@ -48,6 +52,13 @@ interface WorkflowState {
     updateNodeData: <T extends WorkflowNode>(nodeId: string, data: Partial<T['data']>) => void;
     deleteNode: (nodeId: string) => void;
     deleteSelectedNodes: () => void;
+    duplicateNode: (nodeId: string) => string | null;
+
+    // Actions - Task tracking
+    addTask: (nodeId: string, nodeName: string) => string;
+    updateTask: (taskId: string, updates: Partial<RunTask>) => void;
+    removeTask: (taskId: string) => void;
+    clearAllTasks: () => void;
 
     // Actions - Undo/Redo
     undo: () => void;
@@ -105,6 +116,7 @@ export const useWorkflowStore = create<WorkflowState>()(
         workflowId: null,
         workflowName: 'untitled',
         isDirty: false,
+        runTasks: [],
         undoStack: [],
         redoStack: [],
         maxHistorySize: 50,
@@ -112,8 +124,22 @@ export const useWorkflowStore = create<WorkflowState>()(
         // React Flow change handlers
         onNodesChange: (changes) => {
             const state = get();
+
+            // Filter out position changes for locked nodes
+            const filteredChanges = changes.filter((change) => {
+                if (change.type === 'position' && 'id' in change) {
+                    const node = state.nodes.find((n) => n.id === change.id);
+                    if (node && (node.data as { isLocked?: boolean }).isLocked) {
+                        return false; // Don't allow position changes for locked nodes
+                    }
+                }
+                return true;
+            });
+
+            if (filteredChanges.length === 0) return;
+
             // Push to history before significant changes (not just selection changes)
-            const hasSignificantChange = changes.some(
+            const hasSignificantChange = filteredChanges.some(
                 (c) => c.type !== 'select' && c.type !== 'dimensions'
             );
             if (hasSignificantChange) {
@@ -121,7 +147,7 @@ export const useWorkflowStore = create<WorkflowState>()(
             }
 
             set({
-                nodes: applyNodeChanges(changes, state.nodes) as WorkflowNode[],
+                nodes: applyNodeChanges(filteredChanges, state.nodes) as WorkflowNode[],
                 isDirty: true,
             });
         },
@@ -248,6 +274,68 @@ export const useWorkflowStore = create<WorkflowState>()(
                 ),
                 isDirty: true,
             });
+        },
+
+        duplicateNode: (nodeId) => {
+            const state = get();
+            const nodeToDuplicate = state.nodes.find((n) => n.id === nodeId);
+            if (!nodeToDuplicate) return null;
+
+            state.pushToHistory();
+
+            const newNodeId = generateNodeId();
+            const newNode: WorkflowNode = {
+                ...nodeToDuplicate,
+                id: newNodeId,
+                position: {
+                    x: nodeToDuplicate.position.x + 50,
+                    y: nodeToDuplicate.position.y + 50,
+                },
+                data: { ...nodeToDuplicate.data, isLocked: false }, // Reset lock on duplicate
+                selected: false,
+            } as WorkflowNode;
+
+            set({
+                nodes: [...state.nodes, newNode],
+                isDirty: true,
+            });
+
+            return newNodeId;
+        },
+
+        // Task Tracking
+        addTask: (nodeId, nodeName) => {
+            const taskId = `task_${Date.now()}_${nodeIdCounter++}`;
+            const task: RunTask = {
+                id: taskId,
+                nodeId,
+                nodeName,
+                status: 'running',
+                startedAt: new Date(),
+                progress: '1/1',
+            };
+            set((state) => ({
+                runTasks: [...state.runTasks, task],
+            }));
+            return taskId;
+        },
+
+        updateTask: (taskId, updates) => {
+            set((state) => ({
+                runTasks: state.runTasks.map((task) =>
+                    task.id === taskId ? { ...task, ...updates } : task
+                ),
+            }));
+        },
+
+        removeTask: (taskId) => {
+            set((state) => ({
+                runTasks: state.runTasks.filter((task) => task.id !== taskId),
+            }));
+        },
+
+        clearAllTasks: () => {
+            set({ runTasks: [] });
         },
 
         // Undo/Redo

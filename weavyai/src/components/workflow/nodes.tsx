@@ -28,6 +28,8 @@ import {
   ImageIcon,
   Loader2,
   Lock,
+  LockOpen,
+  Pencil,
   Play,
   Plus,
   Trash2,
@@ -48,6 +50,13 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 
 // ============================================================================
 // Shared Components
@@ -124,6 +133,25 @@ const handleStyle = {
 
 export function TextNode({ id, data, selected }: NodeProps<TextFlowNode>) {
   const updateNodeData = useWorkflowStore((s) => s.updateNodeData);
+  const deleteNode = useWorkflowStore((s) => s.deleteNode);
+  const duplicateNode = useWorkflowStore((s) => s.duplicateNode);
+  
+  const [renameDialogOpen, setRenameDialogOpen] = React.useState(false);
+  const [newLabel, setNewLabel] = React.useState(data.label || 'Text');
+
+  const displayLabel = data.label || 'Text';
+  const isLocked = data.isLocked || false;
+
+  const handleRename = () => {
+    if (newLabel.trim()) {
+      updateNodeData<TextFlowNode>(id, { label: newLabel.trim() });
+    }
+    setRenameDialogOpen(false);
+  };
+
+  const toggleLock = () => {
+    updateNodeData<TextFlowNode>(id, { isLocked: !isLocked });
+  };
 
   return (
     <div className="relative">
@@ -144,17 +172,63 @@ export function TextNode({ id, data, selected }: NodeProps<TextFlowNode>) {
       />
 
       <NodeShell
-        title="Text"
+        title={displayLabel}
         icon={<Type className="h-4 w-4" />}
         selected={selected}
+        className="w-[360px]"
         right={
-          <button
-            type="button"
-            aria-label="Node options"
-            className="grid h-7 w-7 place-items-center rounded-md text-foreground/60 hover:bg-muted/40"
-          >
-            <Ellipsis className="h-4 w-4" />
-          </button>
+          <div className="flex items-center gap-1">
+            {isLocked && (
+              <Lock className="h-4 w-4 text-foreground/50" />
+            )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  aria-label="Node options"
+                  className="grid h-7 w-7 place-items-center rounded-md text-foreground/60 hover:bg-muted/40"
+                >
+                  <Ellipsis className="h-4 w-4" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem onClick={() => duplicateNode(id)}>
+                  <Copy className="mr-2 h-4 w-4" />
+                  Duplicate
+                  <span className="ml-auto text-xs text-muted-foreground">ctrl+d</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => {
+                  setNewLabel(displayLabel);
+                  setRenameDialogOpen(true);
+                }}>
+                  <Pencil className="mr-2 h-4 w-4" />
+                  Rename
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={toggleLock}>
+                  {isLocked ? (
+                    <>
+                      <LockOpen className="mr-2 h-4 w-4" />
+                      Unlock
+                    </>
+                  ) : (
+                    <>
+                      <Lock className="mr-2 h-4 w-4" />
+                      Lock
+                    </>
+                  )}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => deleteNode(id)}
+                  className="text-red-400 focus:text-red-400"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete
+                  <span className="ml-auto text-xs text-muted-foreground">delete / backspace</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         }
       >
         <textarea
@@ -170,6 +244,35 @@ export function TextNode({ id, data, selected }: NodeProps<TextFlowNode>) {
           )}
         />
       </NodeShell>
+
+      {/* Rename Dialog */}
+      <Dialog open={renameDialogOpen} onOpenChange={setRenameDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Rename Node</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <Input
+              value={newLabel}
+              onChange={(e) => setNewLabel(e.target.value)}
+              placeholder="Enter node name..."
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleRename();
+              }}
+              className="nodrag"
+              autoFocus
+            />
+            <div className="flex justify-end gap-3">
+              <Button variant="ghost" onClick={() => setRenameDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleRename} className="bg-[#E8FF5A] text-black hover:bg-[#d4eb52]">
+                Rename
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -181,11 +284,29 @@ export function TextNode({ id, data, selected }: NodeProps<TextFlowNode>) {
 export function ImageNode({ id, data, selected }: NodeProps<ImageFlowNode>) {
   const updateNodeData = useWorkflowStore((s) => s.updateNodeData);
   const deleteNode = useWorkflowStore((s) => s.deleteNode);
+  const duplicateNode = useWorkflowStore((s) => s.duplicateNode);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const [renameDialogOpen, setRenameDialogOpen] = React.useState(false);
+  const [newLabel, setNewLabel] = React.useState(data.label || 'Image');
+
+  const displayLabel = data.label || 'Image';
+  const isLocked = data.isLocked || false;
 
   const images = data.images || [];
   const currentIndex = data.currentIndex || 0;
   const viewMode = data.viewMode || 'single';
+
+  const handleRename = () => {
+    if (newLabel.trim()) {
+      updateNodeData<ImageFlowNode>(id, { label: newLabel.trim() });
+    }
+    setRenameDialogOpen(false);
+  };
+
+  const toggleLock = () => {
+    updateNodeData<ImageFlowNode>(id, { isLocked: !isLocked });
+  };
 
   // Handle file selection - supports multiple files
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -267,55 +388,73 @@ export function ImageNode({ id, data, selected }: NodeProps<ImageFlowNode>) {
       />
 
       <NodeShell
-        title="Image"
+        title={displayLabel}
         icon={<ImageIcon className="h-4 w-4" />}
         selected={selected}
-        className="w-[320px]"
+        className="w-[360px]"
         right={
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                type="button"
-                aria-label="Node options"
-                className="grid h-7 w-7 place-items-center rounded-md text-foreground/60 hover:bg-muted/40"
-              >
-                <Ellipsis className="h-4 w-4" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem>
-                <Copy className="mr-2 h-4 w-4" />
-                Duplicate
-                <span className="ml-auto text-xs text-muted-foreground">ctrl+d</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                Rename
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Lock className="mr-2 h-4 w-4" />
-                Lock
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => deleteNode(id)}
-                className="text-red-400 focus:text-red-400"
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete
-                <span className="ml-auto text-xs text-muted-foreground">delete / backspace</span>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <div className="px-2 py-1.5 text-xs text-muted-foreground">View</div>
-              <DropdownMenuItem onClick={() => setViewMode('single')}>
-                Single
-                {viewMode === 'single' && <Check className="ml-auto h-4 w-4" />}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setViewMode('all')}>
-                All
-                {viewMode === 'all' && <Check className="ml-auto h-4 w-4" />}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="flex items-center gap-1">
+            {isLocked && (
+              <Lock className="h-4 w-4 text-foreground/50" />
+            )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  aria-label="Node options"
+                  className="grid h-7 w-7 place-items-center rounded-md text-foreground/60 hover:bg-muted/40"
+                >
+                  <Ellipsis className="h-4 w-4" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem onClick={() => duplicateNode(id)}>
+                  <Copy className="mr-2 h-4 w-4" />
+                  Duplicate
+                  <span className="ml-auto text-xs text-muted-foreground">ctrl+d</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => {
+                  setNewLabel(displayLabel);
+                  setRenameDialogOpen(true);
+                }}>
+                  <Pencil className="mr-2 h-4 w-4" />
+                  Rename
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={toggleLock}>
+                  {isLocked ? (
+                    <>
+                      <LockOpen className="mr-2 h-4 w-4" />
+                      Unlock
+                    </>
+                  ) : (
+                    <>
+                      <Lock className="mr-2 h-4 w-4" />
+                      Lock
+                    </>
+                  )}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => deleteNode(id)}
+                  className="text-red-400 focus:text-red-400"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete
+                  <span className="ml-auto text-xs text-muted-foreground">delete / backspace</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <div className="px-2 py-1.5 text-xs text-muted-foreground">View</div>
+                <DropdownMenuItem onClick={() => setViewMode('single')}>
+                  Single
+                  {viewMode === 'single' && <Check className="ml-auto h-4 w-4" />}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setViewMode('all')}>
+                  All
+                  {viewMode === 'all' && <Check className="ml-auto h-4 w-4" />}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         }
       >
         <input
@@ -446,6 +585,35 @@ export function ImageNode({ id, data, selected }: NodeProps<ImageFlowNode>) {
           Add more images
         </button>
       </NodeShell>
+
+      {/* Rename Dialog */}
+      <Dialog open={renameDialogOpen} onOpenChange={setRenameDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Rename Node</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <Input
+              value={newLabel}
+              onChange={(e) => setNewLabel(e.target.value)}
+              placeholder="Enter node name..."
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleRename();
+              }}
+              className="nodrag"
+              autoFocus
+            />
+            <div className="flex justify-end gap-3">
+              <Button variant="ghost" onClick={() => setRenameDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleRename} className="bg-[#E8FF5A] text-black hover:bg-[#d4eb52]">
+                Rename
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -456,11 +624,35 @@ export function ImageNode({ id, data, selected }: NodeProps<ImageFlowNode>) {
 
 export function LLMNode({ id, data, selected }: NodeProps<LLMFlowNode>) {
   const updateNodeData = useWorkflowStore((s) => s.updateNodeData);
+  const deleteNode = useWorkflowStore((s) => s.deleteNode);
+  const duplicateNode = useWorkflowStore((s) => s.duplicateNode);
   const getConnectedInputs = useWorkflowStore((s) => s.getConnectedInputs);
   const propagateOutput = useWorkflowStore((s) => s.propagateOutput);
+  const addTask = useWorkflowStore((s) => s.addTask);
+  const updateTask = useWorkflowStore((s) => s.updateTask);
+
+  const [renameDialogOpen, setRenameDialogOpen] = React.useState(false);
+  const [newLabel, setNewLabel] = React.useState(data.label || 'Run Any LLM');
+
+  const displayLabel = data.label || 'Run Any LLM';
+  const isLocked = data.isLocked || false;
+
+  const handleRename = () => {
+    if (newLabel.trim()) {
+      updateNodeData<LLMFlowNode>(id, { label: newLabel.trim() });
+    }
+    setRenameDialogOpen(false);
+  };
+
+  const toggleLock = () => {
+    updateNodeData<LLMFlowNode>(id, { isLocked: !isLocked });
+  };
 
   const handleRun = async () => {
     updateNodeData<LLMFlowNode>(id, { isLoading: true, error: undefined });
+
+    // Add task to task manager
+    const taskId = addTask(id, displayLabel);
 
     try {
       // Get connected inputs from other nodes
@@ -498,12 +690,22 @@ export function LLMNode({ id, data, selected }: NodeProps<LLMFlowNode>) {
         error: undefined,
       });
 
+      // Update task to completed
+      updateTask(taskId, { status: 'completed', completedAt: new Date() });
+
       // Propagate output to connected downstream Text nodes
       propagateOutput(id, result.output);
 
     } catch (error) {
       updateNodeData<LLMFlowNode>(id, {
         isLoading: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+
+      // Update task to failed
+      updateTask(taskId, { 
+        status: 'failed', 
+        completedAt: new Date(),
         error: error instanceof Error ? error.message : 'Unknown error',
       });
     }
@@ -551,18 +753,63 @@ export function LLMNode({ id, data, selected }: NodeProps<LLMFlowNode>) {
       />
 
       <NodeShell
-        title="Run Any LLM"
+        title={displayLabel}
         icon={<Sparkles className="h-4 w-4" />}
         selected={selected}
-        className="w-[320px]"
+        className="w-[360px]"
         right={
-          <button
-            type="button"
-            aria-label="Node options"
-            className="grid h-7 w-7 place-items-center rounded-md text-foreground/60 hover:bg-muted/40"
-          >
-            <Ellipsis className="h-4 w-4" />
-          </button>
+          <div className="flex items-center gap-1">
+            {isLocked && (
+              <Lock className="h-4 w-4 text-foreground/50" />
+            )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  aria-label="Node options"
+                  className="grid h-7 w-7 place-items-center rounded-md text-foreground/60 hover:bg-muted/40"
+                >
+                  <Ellipsis className="h-4 w-4" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem onClick={() => duplicateNode(id)}>
+                  <Copy className="mr-2 h-4 w-4" />
+                  Duplicate
+                  <span className="ml-auto text-xs text-muted-foreground">ctrl+d</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => {
+                  setNewLabel(displayLabel);
+                  setRenameDialogOpen(true);
+                }}>
+                  <Pencil className="mr-2 h-4 w-4" />
+                  Rename
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={toggleLock}>
+                  {isLocked ? (
+                    <>
+                      <LockOpen className="mr-2 h-4 w-4" />
+                      Unlock
+                    </>
+                  ) : (
+                    <>
+                      <Lock className="mr-2 h-4 w-4" />
+                      Lock
+                    </>
+                  )}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => deleteNode(id)}
+                  className="text-red-400 focus:text-red-400"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete
+                  <span className="ml-auto text-xs text-muted-foreground">delete / backspace</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         }
       >
         <div className="space-y-4">
@@ -632,6 +879,35 @@ export function LLMNode({ id, data, selected }: NodeProps<LLMFlowNode>) {
           </Button>
         </div>
       </NodeShell>
+
+      {/* Rename Dialog */}
+      <Dialog open={renameDialogOpen} onOpenChange={setRenameDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Rename Node</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <Input
+              value={newLabel}
+              onChange={(e) => setNewLabel(e.target.value)}
+              placeholder="Enter node name..."
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleRename();
+              }}
+              className="nodrag"
+              autoFocus
+            />
+            <div className="flex justify-end gap-3">
+              <Button variant="ghost" onClick={() => setRenameDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleRename} className="bg-[#E8FF5A] text-black hover:bg-[#d4eb52]">
+                Rename
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

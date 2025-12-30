@@ -9,7 +9,9 @@ import {
   ReactFlow,
   ReactFlowProvider,
   useReactFlow,
+  useOnViewportChange,
   type NodeTypes,
+  type Viewport,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { PiShareLight } from 'react-icons/pi';
@@ -24,21 +26,32 @@ import {
   ToolbarIconSort,
 } from '@/components/icons/workflow-icons';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import {
+  Check,
   ChevronDown,
+  Hand,
   ImageIcon,
+  Loader2,
   MousePointer2,
   Redo2,
   Sparkles,
   Type,
   Undo2,
   X,
+  ZoomIn,
+  ZoomOut,
 } from 'lucide-react';
 import { workflowNodeTypes, TextNode, ImageNode, LLMNode } from './nodes';
 import { useWorkflowStore, selectCanUndo, selectCanRedo } from '@/stores/workflowStore';
 import { simpleTestWorkflow, productListingWorkflow } from '@/lib/sampleWorkflows';
-import type { WorkflowNode, WorkflowEdge } from '@/types/workflow.types';
+import type { WorkflowNode, WorkflowEdge, RunTask } from '@/types/workflow.types';
 
 // ============================================================================
 // Quick Access Node Button
@@ -80,7 +93,117 @@ function QuickAccessNodeButton({
 // Bottom Toolbar
 // ============================================================================
 
-function BottomToolbar() {
+// ============================================================================
+// Task Manager Panel
+// ============================================================================
+
+function TaskManagerPanel({ onClose }: { onClose: () => void }) {
+  const runTasks = useWorkflowStore((s) => s.runTasks);
+  const clearAllTasks = useWorkflowStore((s) => s.clearAllTasks);
+
+  const formatTime = (date: Date) => {
+    return new Date(date).toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    });
+  };
+
+  // Sort tasks: running first, then by start time (newest first)
+  const sortedTasks = [...runTasks].sort((a, b) => {
+    if (a.status === 'running' && b.status !== 'running') return -1;
+    if (a.status !== 'running' && b.status === 'running') return 1;
+    return new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime();
+  });
+
+  return (
+    <div className="w-[340px] rounded-lg border border-border/60 bg-card/95 backdrop-blur shadow-lg">
+      <div className="flex items-center justify-between p-3">
+        <div className="text-[16px] font-medium text-foreground">
+          Task manager
+        </div>
+        <div className="flex items-center gap-2">
+          {runTasks.length > 0 && (
+            <button
+              type="button"
+              onClick={clearAllTasks}
+              className="text-sm text-foreground/60 hover:text-foreground transition-colors"
+            >
+              Clear all
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close task manager"
+            className="grid h-8 w-8 place-items-center rounded-md text-foreground/70 hover:bg-muted/30"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+      <div className="h-px w-full bg-border/60" />
+      
+      {runTasks.length === 0 ? (
+        <div className="py-4 px-3 text-[13px] text-foreground/60">
+          No active runs
+        </div>
+      ) : (
+        <div className="max-h-[300px] overflow-y-auto">
+          {sortedTasks.map((task) => (
+            <div
+              key={task.id}
+              className="flex items-center gap-3 px-3 py-3 border-b border-border/30 last:border-b-0"
+            >
+              {/* Status icon */}
+              <div className="flex-shrink-0">
+                {task.status === 'running' ? (
+                  <Loader2 className="h-5 w-5 text-purple-400 animate-spin" />
+                ) : task.status === 'completed' ? (
+                  <div className="h-5 w-5 rounded-full border-2 border-foreground/60 flex items-center justify-center">
+                    <Check className="h-3 w-3 text-foreground/60" />
+                  </div>
+                ) : (
+                  <div className="h-5 w-5 rounded-full border-2 border-red-400 flex items-center justify-center">
+                    <X className="h-3 w-3 text-red-400" />
+                  </div>
+                )}
+              </div>
+
+              {/* Task info */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-foreground truncate">
+                    {formatTime(task.startedAt)}
+                  </span>
+                  <span className="text-sm text-foreground/60">
+                    {task.progress}
+                  </span>
+                </div>
+                {task.error && (
+                  <div className="text-xs text-red-400 truncate mt-0.5">
+                    {task.error}
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
+
+interface BottomToolbarProps {
+  toolMode: 'select' | 'pan';
+  setToolMode: (mode: 'select' | 'pan') => void;
+}
+
+function BottomToolbar({ toolMode, setToolMode }: BottomToolbarProps) {
   const rf = useReactFlow();
   const [zoomPct, setZoomPct] = React.useState(55);
   const undo = useWorkflowStore((s) => s.undo);
@@ -88,33 +211,99 @@ function BottomToolbar() {
   const canUndo = useWorkflowStore(selectCanUndo);
   const canRedo = useWorkflowStore(selectCanRedo);
 
+  // Subscribe to viewport changes to update zoom percentage when zooming with mouse wheel
+  useOnViewportChange({
+    onChange: React.useCallback((viewport: Viewport) => {
+      setZoomPct(Math.round(viewport.zoom * 100));
+    }, []),
+  });
+
   React.useEffect(() => {
     rf.setViewport({ x: 100, y: 50, zoom: 0.55 }, { duration: 0 });
     setZoomPct(55);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const applyZoomPct = (pct: number) => {
-    const clamped = Math.max(10, Math.min(200, pct));
-    const zoom = clamped / 100;
-    const vp = rf.getViewport();
-    rf.setViewport({ x: vp.x, y: vp.y, zoom }, { duration: 120 });
-    setZoomPct(clamped);
+  const zoomIn = () => {
+    const currentZoom = rf.getZoom();
+    const newZoom = Math.min(currentZoom * 1.2, 2);
+    rf.zoomTo(newZoom, { duration: 150 });
   };
+
+  const zoomOut = () => {
+    const currentZoom = rf.getZoom();
+    const newZoom = Math.max(currentZoom / 1.2, 0.1);
+    rf.zoomTo(newZoom, { duration: 150 });
+  };
+
+  const zoomTo100 = () => {
+    rf.zoomTo(1, { duration: 150 });
+  };
+
+  const zoomToFit = () => {
+    rf.fitView({ padding: 0.2, duration: 300 });
+  };
+
+  // Keyboard shortcuts for zoom
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey)) {
+        if (e.key === '+' || e.key === '=') {
+          e.preventDefault();
+          zoomIn();
+        } else if (e.key === '-') {
+          e.preventDefault();
+          zoomOut();
+        } else if (e.key === '0') {
+          e.preventDefault();
+          zoomTo100();
+        } else if (e.key === '1') {
+          e.preventDefault();
+          zoomToFit();
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   return (
     <div className="pointer-events-none absolute bottom-6 left-1/2 -translate-x-1/2">
-      <div className="pointer-events-auto flex items-center gap-2 rounded-lg border border-border/60 bg-card/80 backdrop-blur px-3 py-2 shadow-lg">
+      <div className="pointer-events-auto flex items-center gap-1 rounded-lg border border-border/60 bg-card/80 backdrop-blur px-2 py-2 shadow-lg">
+        {/* Select tool */}
         <button
           type="button"
           aria-label="Select"
-          className="grid h-9 w-9 place-items-center rounded-lg bg-muted/40 text-foreground hover:bg-muted/60"
+          onClick={() => setToolMode('select')}
+          className={cn(
+            'grid h-9 w-9 place-items-center rounded-lg transition-colors',
+            toolMode === 'select' 
+              ? 'bg-[#E8FF5A] text-black' 
+              : 'text-foreground/80 hover:bg-muted/40'
+          )}
         >
           <MousePointer2 className="h-4 w-4" />
         </button>
 
+        {/* Pan tool */}
+        <button
+          type="button"
+          aria-label="Pan"
+          onClick={() => setToolMode('pan')}
+          className={cn(
+            'grid h-9 w-9 place-items-center rounded-lg transition-colors',
+            toolMode === 'pan' 
+              ? 'bg-[#E8FF5A] text-black' 
+              : 'text-foreground/80 hover:bg-muted/40'
+          )}
+        >
+          <Hand className="h-4 w-4" />
+        </button>
+
         <div className="mx-1 h-6 w-px bg-border/60" />
 
+        {/* Undo */}
         <button
           type="button"
           aria-label="Undo"
@@ -127,6 +316,8 @@ function BottomToolbar() {
         >
           <Undo2 className="h-4 w-4" />
         </button>
+        
+        {/* Redo */}
         <button
           type="button"
           aria-label="Redo"
@@ -142,29 +333,42 @@ function BottomToolbar() {
 
         <div className="mx-1 h-6 w-px bg-border/60" />
 
-        <button
-          type="button"
-          aria-label="Zoom out"
-          className="grid h-9 w-9 place-items-center rounded-lg text-foreground/80 hover:bg-muted/40"
-          onClick={() => applyZoomPct(zoomPct - 10)}
-        >
-          −
-        </button>
-        <button
-          type="button"
-          className="h-9 rounded-lg px-3 text-[12px] font-medium text-foreground/80 hover:bg-muted/40"
-          onClick={() => applyZoomPct(55)}
-        >
-          {zoomPct}%
-        </button>
-        <button
-          type="button"
-          aria-label="Zoom in"
-          className="grid h-9 w-9 place-items-center rounded-lg text-foreground/80 hover:bg-muted/40"
-          onClick={() => applyZoomPct(zoomPct + 10)}
-        >
-          +
-        </button>
+        {/* Zoom dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              className="flex items-center gap-1 h-9 rounded-lg px-3 text-[13px] font-medium text-foreground/80 hover:bg-muted/40"
+            >
+              {zoomPct}%
+              <ChevronDown className="h-3 w-3 ml-1" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="center" className="w-48">
+            <DropdownMenuItem onClick={zoomIn} className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <ZoomIn className="h-4 w-4" />
+                Zoom in
+              </div>
+              <span className="text-xs text-muted-foreground">Ctrl +</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={zoomOut} className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <ZoomOut className="h-4 w-4" />
+                Zoom out
+              </div>
+              <span className="text-xs text-muted-foreground">Ctrl -</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={zoomTo100} className="flex items-center justify-between">
+              <span>Zoom to 100%</span>
+              <span className="text-xs text-muted-foreground">Ctrl 0</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={zoomToFit} className="flex items-center justify-between">
+              <span>Zoom to fit</span>
+              <span className="text-xs text-muted-foreground">Ctrl 1</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   );
@@ -190,6 +394,7 @@ function BuilderInner() {
 
   const [leftPanelOpen, setLeftPanelOpen] = React.useState(true);
   const [taskManagerOpen, setTaskManagerOpen] = React.useState(false);
+  const [toolMode, setToolMode] = React.useState<'select' | 'pan'>('select');
 
   // Add node at center of viewport
   const handleAddNode = React.useCallback(
@@ -285,6 +490,14 @@ function BuilderInner() {
           panOnScroll
           zoomOnScroll
           zoomOnDoubleClick={false}
+          // Tool mode controls:
+          // Select mode: can move/select nodes, cannot pan by dragging
+          // Pan mode: can pan by dragging, cannot move/select nodes
+          panOnDrag={toolMode === 'pan'}
+          nodesDraggable={toolMode === 'select'}
+          nodesConnectable={toolMode === 'select'}
+          elementsSelectable={toolMode === 'select'}
+          selectionOnDrag={toolMode === 'select'}
           proOptions={{ hideAttribution: true }}
           defaultEdgeOptions={{
             animated: true,
@@ -299,25 +512,7 @@ function BuilderInner() {
               className="pointer-events-auto"
               style={{ margin: 24, transform: 'translateX(-276px)' }}
             >
-              <div className="w-[300px] rounded-lg border border-border/60 bg-card/80 backdrop-blur shadow-lg">
-                <div className="flex items-center justify-between p-3">
-                  <div className="text-[16px] font-medium text-foreground">
-                    Task manager
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setTaskManagerOpen(false)}
-                    aria-label="Close task manager"
-                    className="grid h-8 w-8 place-items-center rounded-md text-foreground/70 hover:bg-muted/30"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-                <div className="h-px w-full bg-border/60" />
-                <div className="py-4 px-3 text-[13px] text-foreground/60">
-                  No active runs
-                </div>
-              </div>
+              <TaskManagerPanel onClose={() => setTaskManagerOpen(false)} />
             </Panel>
           )}
 
@@ -538,7 +733,7 @@ function BuilderInner() {
           />
         </ReactFlow>
 
-        <BottomToolbar />
+        <BottomToolbar toolMode={toolMode} setToolMode={setToolMode} />
       </div>
     </div>
   );

@@ -7,6 +7,8 @@ import type { Node, Edge } from '@xyflow/react';
 export interface TextNodeData {
     [key: string]: unknown;
     text: string;
+    label?: string;
+    isLocked?: boolean;
 }
 
 export interface ImageItem {
@@ -22,6 +24,8 @@ export interface ImageNodeData {
     images: ImageItem[];
     currentIndex: number;
     viewMode: 'single' | 'all';
+    label?: string;
+    isLocked?: boolean;
 }
 
 export interface LLMNodeData {
@@ -32,6 +36,25 @@ export interface LLMNodeData {
     images?: string[]; // base64 encoded
     output?: string;
     isLoading?: boolean;
+    error?: string;
+    label?: string;
+    isLocked?: boolean;
+}
+
+// ============================================================================
+// Task Manager Types
+// ============================================================================
+
+export type RunTaskStatus = 'running' | 'completed' | 'failed';
+
+export interface RunTask {
+    id: string;
+    nodeId: string;
+    nodeName: string;
+    status: RunTaskStatus;
+    startedAt: Date;
+    completedAt?: Date;
+    progress?: string; // e.g., "1/1", "2/3"
     error?: string;
 }
 
