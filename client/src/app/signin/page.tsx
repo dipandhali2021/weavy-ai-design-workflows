@@ -36,6 +36,7 @@ declare global {
 }
 
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '737286057515-0m14h8fsn0g8fglab18sbgqt7uqueasc.apps.googleusercontent.com';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000';
 
 export default function SignInPage() {
   const router = useRouter();
@@ -49,7 +50,7 @@ export default function SignInPage() {
         
         if (token) {
           // Verify the token is valid by calling the session endpoint
-          const response = await fetch('http://localhost:4000/auth/session', {
+          const response = await fetch(`${API_BASE_URL}/auth/session`, {
             headers: {
               'Authorization': `Bearer ${token}`,
             },
@@ -72,7 +73,7 @@ export default function SignInPage() {
 
   // Redirect to backend OAuth flow
   const handleGoogleSignIn = () => {
-    window.location.href = 'http://localhost:4000/auth/google';
+    window.location.href = `${API_BASE_URL}/auth/google`;
   };
 
   return (
@@ -92,17 +93,16 @@ export default function SignInPage() {
         backgroundRepeat: 'no-repeat, no-repeat, no-repeat, repeat, repeat',
       }}
     >
-      <Link href={"/"} className="absolute left-0 top-0 z-10">
+      <Link href={"/"} className="absolute left-0 top-0 z-10 p-4 md:p-6">
         <img
           src="https://slelguoygbfzlpylpxfs.supabase.co/storage/v1/object/public/test-clones/2f5fd82e-0e64-4bc1-b8bd-486911a2d083-weavy-ai/assets/svgs/682350d42a7c97b440a58480_Nav_20left_20item_20-_20D-1.svg"
           alt="Logo"
           className="h-10 w-auto invert"
-          
         />
       </Link>
 
-      <div className="w-[350px] overflow-hidden rounded-lg border border-white bg-white">
-        <div className="flex h-[280px] w-full items-center justify-center overflow-hidden bg-linear-to-b from-[#5d8190] to-[#7a9999]">
+      <div className="w-[350px] overflow-hidden rounded-lg border border-white bg-white shadow-xl">
+        <div className="flex h-[280px] w-full items-center justify-center overflow-hidden bg-gradient-to-b from-[#5d8190] to-[#7a9999]">
           <img
             src="https://app.weavy.ai/assets/weavy-sign-in-back.png"
             alt="3D Object"

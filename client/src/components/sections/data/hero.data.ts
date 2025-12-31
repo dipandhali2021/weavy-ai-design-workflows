@@ -81,70 +81,70 @@ export const HERO_NODES = [
 
 /**
  * Mobile-optimized nodes for the hero section React Flow diagram
- * Nodes are positioned vertically with smaller sizes for mobile screens
+ * Nodes are positioned in a staggered vertical layout with large spacing to prevent overlapping
  */
 export const HERO_NODES_MOBILE = [
     {
         id: '2',
         type: 'imageNode',
-        position: { x: 0, y: 0 },
+        position: { x: 20, y: 50 },
         data: {
             label: 'COLOR REFERENCE',
             image:
                 'https://cdn.prod.website-files.com/681b040781d5b5e278a69989/681cd77722078ff43fe428f3_hcard-color%20reference.avif',
-            width: 10,
-            height: 40,
+            width: 140,
+            height: 80,
         },
     },
     {
         id: '1',
         type: 'imageNode',
-        position: { x: 0, y: 80 },
+        position: { x: 200, y: 200 },
         data: {
             label: 'RODIN 2.0',
             sublabel: '3D',
             image:
                 'https://cdn.prod.website-files.com/681b040781d5b5e278a69989/681cd65ba87c69df161752e5_3d_card.avif',
-            width: 130,
-            height: 160,
+            width: 120,
+            height: 150,
         },
     },
     {
         id: '3',
         type: 'imageNode',
-        position: { x: 20, y: 220 },
+        position: { x: 20, y: 400 },
         data: {
             label: 'STABLE DIFFUSION',
             sublabel: 'IMAGE',
             image:
                 'https://cdn.prod.website-files.com/681b040781d5b5e278a69989/681cd7cbc22419b32bb9d8d8_hcard%20-%20STABLE%20DIFFUSION.avif',
-            width: 180,
-            height: 280,
+            width: 150,
+            height: 200,
         },
     },
     {
         id: '5',
         type: 'imageNode',
-        position: { x: 230, y: 420 },
+        position: { x: 200, y: 650 },
         data: {
             label: 'FLUX PRO 1.1',
             sublabel: 'IMAGE',
             image:
                 'https://cdn.prod.website-files.com/681b040781d5b5e278a69989/6837510acbe777269734b387_bird_desktop.avif',
-            width: 130,
-            height: 190,
+            width: 120,
+            height: 160,
         },
     },
     {
         id: '6',
         type: 'videoNode',
-        position: { x: 30, y: 620 },
+        position: { x: 20, y: 900 },
         data: {
             label: 'MINIMAX VIDEO',
             sublabel: 'VIDEO',
             video: 'https://assets.weavy.ai/homepage/hero/hero_video.mp4',
-            width: 10,
-            height: 40,
+            width: 250,
+            height: 320,
         },
     },
 ];
@@ -208,10 +208,11 @@ export const HERO_NODE_EXTENT: NodeExtent = [
 
 /**
  * Node extent limits for mobile screens
- * Adjusted for vertical layout
+ * Adjusted for staggered vertical layout with large spacing between nodes
  */
 export const HERO_NODE_EXTENT_MOBILE: NodeExtent = [
-    [0, 600], // Top-left limit
-    [400, 1200], // Bottom-right limit
+    [0, 0], // Top-left limit
+    [400, 1300], // Bottom-right limit - extended for larger spacing
 ];
+
 
