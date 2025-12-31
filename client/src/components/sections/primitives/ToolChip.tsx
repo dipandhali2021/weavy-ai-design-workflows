@@ -22,6 +22,7 @@ export const ToolChip = ({
   isActive,
   onHover,
   onLeave,
+  onClick,
   className = '',
   style,
 }: ToolChipProps) => {
@@ -29,7 +30,7 @@ export const ToolChip = ({
     <div
       className={`
         pointer-events-auto cursor-pointer transition-all duration-300 ease-out 
-        px-6 py-3 rounded-full border text-[18px] font-normal z-20
+        px-4 md:px-6 py-2 md:py-3 rounded-full border text-[14px] md:text-[18px] font-normal z-20
         shadow-[0_2px_8px_rgba(0,0,0,0.08)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.12)] hover:scale-[1.02]
         ${isActive
           ? 'bg-[#f7ff9e] text-black border-[#f7ff9e]'
@@ -40,9 +41,10 @@ export const ToolChip = ({
       style={style}
       onMouseEnter={onHover}
       onMouseLeave={onLeave}
-      onClick={onHover}
+      onClick={onClick || onHover}
     >
       <div className="whitespace-nowrap">{label}</div>
     </div>
   );
 };
+

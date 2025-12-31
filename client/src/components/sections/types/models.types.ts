@@ -34,8 +34,11 @@ export interface ToolChipProps {
     onHover: () => void;
     /** Callback when mouse leaves chip */
     onLeave: () => void;
+    /** Optional click handler for mobile touch interactions */
+    onClick?: () => void;
     /** Additional CSS classes */
     className?: string;
     /** Inline styles for positioning */
     style?: React.CSSProperties;
 }
+

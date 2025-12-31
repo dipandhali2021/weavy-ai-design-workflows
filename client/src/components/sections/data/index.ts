@@ -1,5 +1,5 @@
 // Hero section data
-export { HERO_NODES, HERO_EDGES, HERO_NODE_EXTENT } from './hero.data';
+export { HERO_NODES, HERO_EDGES, HERO_NODE_EXTENT, HERO_NODES_MOBILE, HERO_NODE_EXTENT_MOBILE } from './hero.data';
 
 // AI Models and Tools data
 export { AI_MODELS, PROFESSIONAL_TOOLS, DEFAULT_TOOL_ASSET } from './models.data';

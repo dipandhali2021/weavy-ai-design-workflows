@@ -12,6 +12,7 @@ import { GradientOverlay } from './primitives';
  * - Sticky content that changes based on scroll position
  * - Background images/videos that transition smoothly
  * - Scrolling list of model names that highlight when active
+ * - Fully responsive design for mobile screens
  */
 export default function AIModelsSection() {
   const { sectionRef, progress } = useScrollProgress();
@@ -74,26 +75,21 @@ export default function AIModelsSection() {
         <GradientOverlay position="top" fromColor="#0a1a1a" />
         <GradientOverlay position="bottom" fromColor="#4a7c7c" />
 
-        {/* Content Overlay */}
-        <div className="relative z-30 h-full w-full flex">
-          {/* Left Text Content */}
-          <div className="w-[40%] h-full flex flex-col justify-center pl-12 md:pl-20">
+        {/* Content Overlay - Responsive Layout */}
+        <div className="relative z-30 h-full w-full flex flex-col md:flex-row">
+          {/* Left Text Content - Top on mobile */}
+          <div className="w-full md:w-[40%] h-auto md:h-full flex flex-col justify-start md:justify-center pt-20 md:pt-0 px-4 md:px-0 md:pl-12 lg:pl-20">
             <h2
-              className="text-white font-light leading-[0.95] tracking-[-0.03em] mb-6"
+              className="text-white font-light leading-[0.95] tracking-[-0.03em] mb-4 md:mb-6 md:text-[5rem] text-[4rem] "
               style={{
-                fontSize: 'clamp(3rem, 6vw, 5rem)',
                 fontFamily: "'Inter', -apple-system, sans-serif",
               }}
             >
-              Use all AI<br />
-              models,<br />
-              together at<br />
-              last
+              Use all AI models, together at last
             </h2>
             <p
-              className="max-w-[320px] text-white/70 leading-relaxed"
+              className="text-white leading-relaxed text-sm md:text-base"
               style={{
-                fontSize: '0.875rem',
                 fontFamily: "'Inter', -apple-system, sans-serif",
               }}
             >
@@ -101,13 +97,13 @@ export default function AIModelsSection() {
             </p>
           </div>
 
-          {/* Right Scrolling List of Model Names */}
-          <div className="w-[55%] h-full flex items-center justify-start overflow-hidden">
+          {/* Right Scrolling List of Model Names - Below text on mobile */}
+          <div className="w-full md:w-[55%] flex-1 md:h-full flex items-start md:items-center justify-start overflow-hidden px-4 md:px-0 mt-8 md:mt-0">
             <div className="relative h-auto w-full">
               <div
-                className="transition-transform duration-700 ease-out flex flex-col"
+                className="transition-transform duration-700 ease-out flex flex-col mt-2 md:mt-20"
                 style={{
-                  transform: `translateY(calc(50vh - ${activeIndex * 58}px - 180px))`,
+                  transform: `translateY(calc(20vh - ${activeIndex * 48}px))`,
                 }}
               >
                 {AI_MODELS.map((model, idx) => (
@@ -118,12 +114,11 @@ export default function AIModelsSection() {
                     }`}
                   >
                     <span
-                      className="tracking-[-0.02em]"
+                      className="tracking-[-0.02em] text-[4rem]"
                       style={{
-                        fontSize: 'clamp(4rem, 5vw, 4rem)',
                         fontFamily: "'General Sans', 'Inter', -apple-system, sans-serif",
                         fontWeight: 400,
-                        lineHeight: 1.15,
+                        lineHeight: 1.3,
                         color: activeIndex === idx ? '#f7ff9e' : 'rgba(255, 255, 255, 0.4)',
                       }}
                     >
@@ -142,3 +137,4 @@ export default function AIModelsSection() {
     </section>
   );
 }
+
