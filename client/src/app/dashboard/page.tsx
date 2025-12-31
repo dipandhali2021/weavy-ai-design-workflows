@@ -52,6 +52,7 @@ import {
   SHOWCASE_ITEMS,
   formatTimeAgo,
 } from '@/components/dashboard';
+import { Spinner } from '@/components/ui/spinner';
 
 /**
  * DashboardContent Component
@@ -361,8 +362,9 @@ function DashboardContent() {
 
   if (isLoading) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="text-foreground/60">Loading...</div>
+      <div className="dark flex h-screen flex-col items-center justify-center bg-background gap-3">
+        <Spinner className="size-8 text-primary" />
+        <div className="text-foreground/60 text-sm">Loading dashboard...</div>
       </div>
     );
   }
@@ -772,7 +774,7 @@ function DashboardContent() {
  */
 export default function DashboardPage() {
   return (
-    <Suspense fallback={<div className="dark h-screen flex items-center justify-center bg-background"><div className="text-foreground/60">Loading...</div></div>}>
+    <Suspense fallback={<div className="dark h-screen flex flex-col items-center justify-center bg-background gap-3"><Spinner className="size-8 text-primary" /><div className="text-foreground/60 text-sm">Loading...</div></div>}>
       <DashboardContent />
     </Suspense>
   );

@@ -20,6 +20,7 @@ import type { WorkflowNode, WorkflowEdge } from '@/types/workflow.types';
 import { workflowNodeTypes } from './nodes';
 import { customEdgeTypes } from './custom-edges';
 import { BottomToolbar, LeftPanel, RightPanel } from './primitives';
+import { Spinner } from '@/components/ui/spinner';
 
 // ============================================================================
 // Main Builder Component
@@ -295,8 +296,9 @@ export function WorkflowBuilder({ workflowId }: WorkflowBuilderProps) {
 
   if (isLoading) {
     return (
-      <div className="dark h-screen w-screen flex items-center justify-center bg-background">
-        <div className="text-foreground/60">Loading workflow...</div>
+      <div className="dark h-screen w-screen flex flex-col items-center justify-center bg-background gap-3">
+        <Spinner className="size-8 text-primary" />
+        <div className="text-foreground/60 text-sm">Loading workflow...</div>
       </div>
     );
   }
