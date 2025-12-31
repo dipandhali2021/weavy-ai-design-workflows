@@ -89,6 +89,10 @@ export interface WorkflowState {
 
     // Propagate output to connected downstream nodes
     propagateOutput: (sourceNodeId: string, output: string) => void;
+
+    // Import/Export
+    exportWorkflow: () => void;
+    importWorkflow: (file: File) => Promise<boolean>;
 }
 
 // ============================================================================
@@ -619,6 +623,63 @@ export const useWorkflowStore = create<WorkflowState>()(
                         ) as WorkflowNode[],
                     }));
                 }
+            }
+        },
+
+        // Export workflow as JSON file
+        exportWorkflow: () => {
+            const state = get();
+            const workflowData = {
+                name: state.workflowName,
+                nodes: state.nodes,
+                edges: state.edges,
+                exportedAt: new Date().toISOString(),
+                version: '1.0',
+            };
+
+            const jsonString = JSON.stringify(workflowData, null, 2);
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${state.workflowName || 'workflow'}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        },
+
+        // Import workflow from JSON file
+        importWorkflow: async (file: File) => {
+            try {
+                const text = await file.text();
+                const data = JSON.parse(text);
+
+                // Validate the imported data structure
+                if (!data.nodes || !Array.isArray(data.nodes)) {
+                    console.error('Invalid workflow: missing nodes array');
+                    return false;
+                }
+                if (!data.edges || !Array.isArray(data.edges)) {
+                    console.error('Invalid workflow: missing edges array');
+                    return false;
+                }
+
+                const state = get();
+                state.pushToHistory();
+
+                set({
+                    workflowName: data.name || 'Imported Workflow',
+                    nodes: data.nodes as WorkflowNode[],
+                    edges: data.edges as WorkflowEdge[],
+                    isDirty: true,
+                });
+
+                return true;
+            } catch (error) {
+                console.error('Error importing workflow:', error);
+                return false;
             }
         },
     }))

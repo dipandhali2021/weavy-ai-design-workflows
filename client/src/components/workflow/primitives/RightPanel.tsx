@@ -4,10 +4,11 @@ import * as React from 'react';
 import { Panel } from '@xyflow/react';
 import { PiShareLight } from 'react-icons/pi';
 import { TbAsterisk } from 'react-icons/tb';
-import { Check, ChevronDown, Loader2, Save } from 'lucide-react';
+import { Check, ChevronDown, Download, Loader2, Save, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { TaskManagerPanel } from './TaskManagerPanel';
+import { useWorkflowStore } from '@/stores/workflowStore';
 
 interface RightPanelProps {
   isSaving: boolean;
@@ -22,13 +23,47 @@ interface RightPanelProps {
  * - Credits display
  * - Share button
  * - Save status indicator
+ * - Import/Export buttons
  * - Task manager toggle
  */
 export function RightPanel({ isSaving, isDirty, onSave }: RightPanelProps) {
   const [taskManagerOpen, setTaskManagerOpen] = React.useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  
+  const exportWorkflow = useWorkflowStore((s) => s.exportWorkflow);
+  const importWorkflow = useWorkflowStore((s) => s.importWorkflow);
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const success = await importWorkflow(file);
+      if (success) {
+        console.log('Workflow imported successfully');
+      } else {
+        console.error('Failed to import workflow');
+      }
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
 
   return (
     <>
+      {/* Hidden file input for import */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        accept=".json"
+        className="hidden"
+      />
+
       {/* Task manager panel */}
       {taskManagerOpen && (
         <Panel
@@ -99,6 +134,28 @@ export function RightPanel({ isSaving, isDirty, onSave }: RightPanelProps) {
             </button>
           </div>
 
+          {/* Import/Export Buttons */}
+          <div className="mt-2 flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleImportClick}
+              className="flex-1 flex items-center justify-center gap-1.5 text-xs px-2 py-1.5 rounded-md bg-muted/50 text-foreground/70 hover:bg-muted hover:text-foreground transition-colors"
+              title="Import workflow from JSON"
+            >
+              <Upload className="h-3 w-3" />
+              <span>Import</span>
+            </button>
+            <button
+              type="button"
+              onClick={exportWorkflow}
+              className="flex-1 flex items-center justify-center gap-1.5 text-xs px-2 py-1.5 rounded-md bg-muted/50 text-foreground/70 hover:bg-muted hover:text-foreground transition-colors"
+              title="Export workflow as JSON"
+            >
+              <Download className="h-3 w-3" />
+              <span>Export</span>
+            </button>
+          </div>
+
           <div className="mt-2">
             <button
               type="button"
@@ -115,3 +172,4 @@ export function RightPanel({ isSaving, isDirty, onSave }: RightPanelProps) {
     </>
   );
 }
+

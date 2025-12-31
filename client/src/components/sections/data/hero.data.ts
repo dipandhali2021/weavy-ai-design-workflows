@@ -1,9 +1,9 @@
-import type { NodeExtent } from '../types';
+import type { HeroNode, NodeExtent } from '../types';
 
 /**
  * Initial nodes for the hero section React Flow diagram (Desktop)
  */
-export const HERO_NODES = [
+export const HERO_NODES: HeroNode[] = [
     {
         id: '1',
         type: 'imageNode',
@@ -83,7 +83,7 @@ export const HERO_NODES = [
  * Mobile-optimized nodes for the hero section React Flow diagram
  * Nodes are positioned in a staggered vertical layout with large spacing to prevent overlapping
  */
-export const HERO_NODES_MOBILE = [
+export const HERO_NODES_MOBILE: HeroNode[] = [
     {
         id: '2',
         type: 'imageNode',
