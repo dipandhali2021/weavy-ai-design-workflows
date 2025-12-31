@@ -13,6 +13,7 @@ import passport from './config/passport.js';
 import authRoutes from './routes/auth.js';
 import workflowRoutes from './routes/workflow.js';
 import folderRoutes from './routes/folder.js';
+import llmRoutes from './routes/llm.js';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -28,9 +29,9 @@ app.use(
     })
 );
 
-// Body parsing
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Body parsing - increased limit for large image uploads
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Cookie parser
 app.use(cookieParser());
@@ -66,6 +67,7 @@ app.get('/health', (req: Request, res: Response) => {
 app.use('/auth', authRoutes);
 app.use('/workflow', workflowRoutes);
 app.use('/folder', folderRoutes);
+app.use('/llm', llmRoutes);
 
 // 404 handler
 app.use((req: Request, res: Response) => {

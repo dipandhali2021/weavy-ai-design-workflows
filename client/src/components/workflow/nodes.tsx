@@ -1,9 +1,10 @@
 'use client';
 
 import * as React from 'react';
-import { Handle, Position, type NodeProps, useReactFlow } from '@xyflow/react';
+import { Handle, Position, type NodeProps, useReactFlow, Edge } from '@xyflow/react';
 import { cn } from '@/lib/utils';
-import { useWorkflowStore } from '@/stores/workflowStore';
+import { useWorkflowStore, type WorkflowState } from '@/stores/workflowStore';
+import { api } from '@/lib/api';
 import {
   type TextFlowNode,
   type ImageFlowNode,
@@ -170,8 +171,8 @@ function HandleWithLabel({
   style?: React.CSSProperties;
 }) {
   // Check if this handle is connected
-  const edges = useWorkflowStore((s) => s.edges);
-  const isConnected = edges.some((edge) => {
+  const edges = useWorkflowStore((s: WorkflowState) => s.edges);
+  const isConnected = edges.some((edge: Edge) => {
     if (type === 'source') {
       return edge.source === nodeId && edge.sourceHandle === id;
     }
@@ -200,9 +201,9 @@ function HandleWithLabel({
 // ============================================================================
 
 export function TextNode({ id, data, selected }: NodeProps<TextFlowNode>) {
-  const updateNodeData = useWorkflowStore((s) => s.updateNodeData);
-  const deleteNode = useWorkflowStore((s) => s.deleteNode);
-  const duplicateNode = useWorkflowStore((s) => s.duplicateNode);
+  const updateNodeData = useWorkflowStore((s: WorkflowState) => s.updateNodeData);
+  const deleteNode = useWorkflowStore((s: WorkflowState) => s.deleteNode);
+  const duplicateNode = useWorkflowStore((s: WorkflowState) => s.duplicateNode);
   
   const [renameDialogOpen, setRenameDialogOpen] = React.useState(false);
   const [newLabel, setNewLabel] = React.useState(data.label || 'Text');
@@ -358,9 +359,9 @@ export function TextNode({ id, data, selected }: NodeProps<TextFlowNode>) {
 // ============================================================================
 
 export function ImageNode({ id, data, selected }: NodeProps<ImageFlowNode>) {
-  const updateNodeData = useWorkflowStore((s) => s.updateNodeData);
-  const deleteNode = useWorkflowStore((s) => s.deleteNode);
-  const duplicateNode = useWorkflowStore((s) => s.duplicateNode);
+  const updateNodeData = useWorkflowStore((s: WorkflowState) => s.updateNodeData);
+  const deleteNode = useWorkflowStore((s: WorkflowState) => s.deleteNode);
+  const duplicateNode = useWorkflowStore((s: WorkflowState) => s.duplicateNode);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const [renameDialogOpen, setRenameDialogOpen] = React.useState(false);
@@ -703,13 +704,13 @@ export function ImageNode({ id, data, selected }: NodeProps<ImageFlowNode>) {
 // ============================================================================
 
 export function LLMNode({ id, data, selected }: NodeProps<LLMFlowNode>) {
-  const updateNodeData = useWorkflowStore((s) => s.updateNodeData);
-  const deleteNode = useWorkflowStore((s) => s.deleteNode);
-  const duplicateNode = useWorkflowStore((s) => s.duplicateNode);
-  const getConnectedInputs = useWorkflowStore((s) => s.getConnectedInputs);
-  const propagateOutput = useWorkflowStore((s) => s.propagateOutput);
-  const addTask = useWorkflowStore((s) => s.addTask);
-  const updateTask = useWorkflowStore((s) => s.updateTask);
+  const updateNodeData = useWorkflowStore((s: WorkflowState) => s.updateNodeData);
+  const deleteNode = useWorkflowStore((s: WorkflowState) => s.deleteNode);
+  const duplicateNode = useWorkflowStore((s: WorkflowState) => s.duplicateNode);
+  const getConnectedInputs = useWorkflowStore((s: WorkflowState) => s.getConnectedInputs);
+  const propagateOutput = useWorkflowStore((s: WorkflowState) => s.propagateOutput);
+  const addTask = useWorkflowStore((s: WorkflowState) => s.addTask);
+  const updateTask = useWorkflowStore((s: WorkflowState) => s.updateTask);
 
   const [renameDialogOpen, setRenameDialogOpen] = React.useState(false);
   const [newLabel, setNewLabel] = React.useState(data.label || 'Run Any LLM');
@@ -747,18 +748,12 @@ export function LLMNode({ id, data, selected }: NodeProps<LLMFlowNode>) {
         throw new Error('User message is required. Connect a Text node to the user_message input.');
       }
 
-      const response = await fetch('/api/llm/run', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: data.model,
-          systemPrompt,
-          userMessage,
-          images,
-        }),
+      const result = await api.runLLM({
+        model: data.model,
+        systemPrompt,
+        userMessage,
+        images,
       });
-
-      const result = await response.json();
 
       if (!result.success) {
         throw new Error(result.error || 'LLM request failed');
@@ -774,7 +769,7 @@ export function LLMNode({ id, data, selected }: NodeProps<LLMFlowNode>) {
       updateTask(taskId, { status: 'completed', completedAt: new Date() });
 
       // Propagate output to connected downstream Text nodes
-      propagateOutput(id, result.output);
+      propagateOutput(id, result.output || '');
 
     } catch (error) {
       updateNodeData<LLMFlowNode>(id, {

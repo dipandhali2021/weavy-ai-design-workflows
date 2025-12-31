@@ -248,6 +248,19 @@ class ApiClient {
       method: 'DELETE',
     });
   }
+
+  // LLM endpoints
+  async runLLM(params: {
+    model: string;
+    systemPrompt?: string;
+    userMessage: string;
+    images?: string[];
+  }): Promise<{ success: boolean; output?: string; error?: string }> {
+    return this.request<{ success: boolean; output?: string; error?: string }>('/llm/run', {
+      method: 'POST',
+      body: JSON.stringify(params),
+    });
+  }
 }
 
 export const api = new ApiClient(API_URL);

@@ -25,7 +25,7 @@ import api from '@/lib/api';
 // Store Types
 // ============================================================================
 
-interface WorkflowState {
+export interface WorkflowState {
     // Core state
     nodes: WorkflowNode[];
     edges: WorkflowEdge[];
