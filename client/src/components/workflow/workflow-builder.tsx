@@ -14,7 +14,7 @@ import {
 import '@xyflow/react/dist/style.css';
 
 import { useWorkflowStore } from '@/stores/workflowStore';
-import { simpleTestWorkflow, productListingWorkflow } from '@/lib/sampleWorkflows';
+import { simpleTestWorkflow, productListingWorkflow } from '@/components/workflow/data/sampleWorkflows';
 import type { WorkflowNode, WorkflowEdge } from '@/types/workflow.types';
 
 import { workflowNodeTypes } from './nodes';

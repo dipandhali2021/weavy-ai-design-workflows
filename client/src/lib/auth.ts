@@ -1,13 +1,25 @@
+/**
+ * Authentication Utilities
+ * 
+ * Client-side auth state management using localStorage.
+ * Works with the API client for token management.
+ */
+
+import type { User } from '@/types/api.types';
+
+// Re-export User type as AuthUser for backward compatibility
+export type AuthUser = User;
+
+/** localStorage key for auth token */
 export const AUTH_TOKEN_KEY = 'weavyai:token';
+
+/** localStorage key for user data */
 export const AUTH_USER_KEY = 'weavyai:user';
 
-export interface AuthUser {
-    id: string;
-    email: string;
-    name: string;
-    avatar?: string;
-}
-
+/**
+ * Get the stored authentication token
+ * @returns Token string or null if not found
+ */
 export function getStoredToken(): string | null {
     if (typeof window === 'undefined') return null;
     try {
@@ -17,6 +29,10 @@ export function getStoredToken(): string | null {
     }
 }
 
+/**
+ * Store or clear the authentication token
+ * @param token - Token to store, or null to clear
+ */
 export function setStoredToken(token: string | null): void {
     if (typeof window === 'undefined') return;
     try {
@@ -30,6 +46,10 @@ export function setStoredToken(token: string | null): void {
     }
 }
 
+/**
+ * Get the stored user data
+ * @returns User object or null if not found
+ */
 export function getStoredUser(): AuthUser | null {
     if (typeof window === 'undefined') return null;
     try {
@@ -41,6 +61,10 @@ export function getStoredUser(): AuthUser | null {
     }
 }
 
+/**
+ * Store or clear user data
+ * @param user - User object to store, or null to clear
+ */
 export function setStoredUser(user: AuthUser | null): void {
     if (typeof window === 'undefined') return;
     try {
@@ -54,10 +78,17 @@ export function setStoredUser(user: AuthUser | null): void {
     }
 }
 
+/**
+ * Check if the user is authenticated
+ * @returns true if both token and user are stored
+ */
 export function isAuthenticated(): boolean {
     return !!getStoredToken() && !!getStoredUser();
 }
 
+/**
+ * Clear all authentication data
+ */
 export function clearAuth(): void {
     setStoredToken(null);
     setStoredUser(null);

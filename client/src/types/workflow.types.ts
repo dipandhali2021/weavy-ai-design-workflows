@@ -116,11 +116,7 @@ export interface LLMRunRequest {
     images?: string[]; // base64 encoded without data URI prefix
 }
 
-export interface LLMRunResponse {
-    success: boolean;
-    output?: string;
-    error?: string;
-}
+// LLMRunResponse is exported from api.types.ts
 
 // ============================================================================
 // Workflow Persistence

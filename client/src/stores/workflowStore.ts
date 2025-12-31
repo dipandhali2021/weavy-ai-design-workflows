@@ -488,8 +488,9 @@ export const useWorkflowStore = create<WorkflowState>()(
             try {
                 const response = await api.updateWorkflow(workflowId, {
                     name: workflowName,
-                    nodes: nodes as unknown as import('@/lib/api').WorkflowNode[],
-                    edges: edges as unknown as import('@/lib/api').WorkflowEdge[],
+                    // Cast to API types for backend serialization
+                    nodes: nodes as unknown as Parameters<typeof api.updateWorkflow>[1]['nodes'],
+                    edges: edges as unknown as Parameters<typeof api.updateWorkflow>[1]['edges'],
                 });
 
                 if (response.success) {
@@ -524,8 +525,9 @@ export const useWorkflowStore = create<WorkflowState>()(
 
                 // Now update with the nodes and edges
                 const updateResponse = await api.updateWorkflow(workflowId, {
-                    nodes: nodes as unknown as import('@/lib/api').WorkflowNode[],
-                    edges: edges as unknown as import('@/lib/api').WorkflowEdge[],
+                    // Cast to API types for backend serialization
+                    nodes: nodes as unknown as Parameters<typeof api.updateWorkflow>[1]['nodes'],
+                    edges: edges as unknown as Parameters<typeof api.updateWorkflow>[1]['edges'],
                 });
 
                 if (updateResponse.success) {

@@ -1,87 +1,35 @@
+/**
+ * API Client
+ * 
+ * Centralized HTTP client for all backend API calls.
+ * Handles authentication, request formatting, and error handling.
+ */
+
+import type {
+  User,
+  AuthResponse,
+  Workflow,
+  WorkflowListResponse,
+  WorkflowResponse,
+  UpdateWorkflowData,
+  Folder,
+  FolderListResponse,
+  FolderResponse,
+  LLMRunParams,
+  LLMRunResponse,
+  ApiResponse,
+} from '@/types/api.types';
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
-export interface User {
-  id: string;
-  email: string;
-  name: string;
-  avatar?: string;
-}
-
-export interface AuthResponse {
-  success: boolean;
-  user?: User;
-  token?: string;
-  message?: string;
-}
-
-export interface WorkflowNode {
-  id: string;
-  type: string;
-  position: { x: number; y: number };
-  data: Record<string, unknown>;
-}
-
-export interface WorkflowEdge {
-  id: string;
-  source: string;
-  target: string;
-  sourceHandle?: string;
-  targetHandle?: string;
-  type?: string;
-}
-
-export interface Workflow {
-  id: string;
-  name: string;
-  folderId?: string | null;
-  nodes?: WorkflowNode[];
-  edges?: WorkflowEdge[];
-  thumbnail?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface Folder {
-  id: string;
-  name: string;
-  parentId: string | null;
-  fileCount: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface WorkflowListResponse {
-  success: boolean;
-  workflows?: Workflow[];
-  message?: string;
-}
-
-export interface WorkflowResponse {
-  success: boolean;
-  workflow?: Workflow;
-  message?: string;
-}
-
-export interface FolderListResponse {
-  success: boolean;
-  folders?: Folder[];
-  message?: string;
-}
-
-export interface FolderResponse {
-  success: boolean;
-  folder?: Folder;
-  message?: string;
-}
-
-export interface UpdateWorkflowData {
-  name?: string;
-  folderId?: string | null;
-  nodes?: WorkflowNode[];
-  edges?: WorkflowEdge[];
-  thumbnail?: string;
-}
-
+/**
+ * API Client class for making authenticated requests to the backend.
+ * 
+ * Features:
+ * - Automatic token management (localStorage)
+ * - Type-safe request/response handling
+ * - Consistent error handling
+ */
 class ApiClient {
   private baseUrl: string;
   private token: string | null = null;
@@ -94,6 +42,10 @@ class ApiClient {
     }
   }
 
+  /**
+   * Set the authentication token
+   * @param token - JWT token or null to clear
+   */
   setToken(token: string | null): void {
     this.token = token;
     if (typeof window !== 'undefined') {
@@ -105,10 +57,19 @@ class ApiClient {
     }
   }
 
+  /**
+   * Get the current authentication token
+   */
   getToken(): string | null {
     return this.token;
   }
 
+  /**
+   * Make an authenticated request to the API
+   * @param endpoint - API endpoint path
+   * @param options - Fetch options
+   * @returns Parsed JSON response
+   */
   private async request<T>(
     endpoint: string,
     options: RequestInit = {}
@@ -137,7 +98,14 @@ class ApiClient {
     return data;
   }
 
-  // Auth endpoints
+  // =========================================================================
+  // Auth Endpoints
+  // =========================================================================
+
+  /**
+   * Authenticate with Google OAuth credential
+   * @param credential - Google OAuth credential token
+   */
   async googleAuth(credential: string): Promise<AuthResponse> {
     const response = await this.request<AuthResponse>('/auth/google', {
       method: 'POST',
@@ -151,6 +119,9 @@ class ApiClient {
     return response;
   }
 
+  /**
+   * Get the current session status
+   */
   async getSession(): Promise<AuthResponse> {
     try {
       return await this.request<AuthResponse>('/auth/session');
@@ -160,6 +131,9 @@ class ApiClient {
     }
   }
 
+  /**
+   * Get the currently authenticated user
+   */
   async getCurrentUser(): Promise<AuthResponse> {
     try {
       return await this.request<AuthResponse>('/auth/me');
@@ -168,6 +142,9 @@ class ApiClient {
     }
   }
 
+  /**
+   * Log out the current user
+   */
   async logout(): Promise<AuthResponse> {
     try {
       const response = await this.request<AuthResponse>('/auth/logout', {
@@ -181,7 +158,14 @@ class ApiClient {
     }
   }
 
-  // Workflow endpoints
+  // =========================================================================
+  // Workflow Endpoints
+  // =========================================================================
+
+  /**
+   * Get all workflows, optionally filtered by folder
+   * @param folderId - Filter by folder ID (null for root)
+   */
   async getWorkflows(folderId?: string | null): Promise<WorkflowListResponse> {
     const params = new URLSearchParams();
     if (folderId !== undefined) {
@@ -191,6 +175,11 @@ class ApiClient {
     return this.request<WorkflowListResponse>(`/workflow${query}`);
   }
 
+  /**
+   * Create a new workflow
+   * @param name - Workflow name
+   * @param folderId - Parent folder ID (null for root)
+   */
   async createWorkflow(name: string = 'untitled', folderId?: string | null): Promise<WorkflowResponse> {
     return this.request<WorkflowResponse>('/workflow', {
       method: 'POST',
@@ -198,10 +187,19 @@ class ApiClient {
     });
   }
 
+  /**
+   * Get a workflow by ID
+   * @param id - Workflow ID
+   */
   async getWorkflow(id: string): Promise<WorkflowResponse> {
     return this.request<WorkflowResponse>(`/workflow/${id}`);
   }
 
+  /**
+   * Update a workflow
+   * @param id - Workflow ID
+   * @param data - Fields to update
+   */
   async updateWorkflow(id: string, data: UpdateWorkflowData): Promise<WorkflowResponse> {
     return this.request<WorkflowResponse>(`/workflow/${id}`, {
       method: 'PUT',
@@ -209,13 +207,24 @@ class ApiClient {
     });
   }
 
-  async deleteWorkflow(id: string): Promise<{ success: boolean; message?: string }> {
-    return this.request<{ success: boolean; message?: string }>(`/workflow/${id}`, {
+  /**
+   * Delete a workflow
+   * @param id - Workflow ID
+   */
+  async deleteWorkflow(id: string): Promise<ApiResponse> {
+    return this.request<ApiResponse>(`/workflow/${id}`, {
       method: 'DELETE',
     });
   }
 
-  // Folder endpoints
+  // =========================================================================
+  // Folder Endpoints
+  // =========================================================================
+
+  /**
+   * Get all folders, optionally filtered by parent
+   * @param parentId - Filter by parent folder ID
+   */
   async getFolders(parentId?: string | null): Promise<FolderListResponse> {
     const params = new URLSearchParams();
     if (parentId) {
@@ -225,6 +234,11 @@ class ApiClient {
     return this.request<FolderListResponse>(`/folder${query}`);
   }
 
+  /**
+   * Create a new folder
+   * @param name - Folder name
+   * @param parentId - Parent folder ID (null for root)
+   */
   async createFolder(name: string, parentId?: string | null): Promise<FolderResponse> {
     return this.request<FolderResponse>('/folder', {
       method: 'POST',
@@ -232,10 +246,19 @@ class ApiClient {
     });
   }
 
+  /**
+   * Get a folder by ID
+   * @param id - Folder ID
+   */
   async getFolder(id: string): Promise<FolderResponse> {
     return this.request<FolderResponse>(`/folder/${id}`);
   }
 
+  /**
+   * Update a folder name
+   * @param id - Folder ID
+   * @param name - New folder name
+   */
   async updateFolder(id: string, name: string): Promise<FolderResponse> {
     return this.request<FolderResponse>(`/folder/${id}`, {
       method: 'PUT',
@@ -243,26 +266,35 @@ class ApiClient {
     });
   }
 
-  async deleteFolder(id: string): Promise<{ success: boolean; message?: string }> {
-    return this.request<{ success: boolean; message?: string }>(`/folder/${id}`, {
+  /**
+   * Delete a folder
+   * @param id - Folder ID
+   */
+  async deleteFolder(id: string): Promise<ApiResponse> {
+    return this.request<ApiResponse>(`/folder/${id}`, {
       method: 'DELETE',
     });
   }
 
-  // LLM endpoints
-  async runLLM(params: {
-    model: string;
-    systemPrompt?: string;
-    userMessage: string;
-    images?: string[];
-  }): Promise<{ success: boolean; output?: string; error?: string }> {
-    return this.request<{ success: boolean; output?: string; error?: string }>('/llm/run', {
+  // =========================================================================
+  // LLM Endpoints
+  // =========================================================================
+
+  /**
+   * Run LLM inference
+   * @param params - LLM parameters (model, prompts, images)
+   */
+  async runLLM(params: LLMRunParams): Promise<LLMRunResponse> {
+    return this.request<LLMRunResponse>('/llm/run', {
       method: 'POST',
       body: JSON.stringify(params),
     });
   }
 }
 
+// Export singleton instance
 export const api = new ApiClient(API_URL);
 export default api;
 
+// Re-export types for convenience
+export type { User, Workflow, Folder } from '@/types/api.types';
