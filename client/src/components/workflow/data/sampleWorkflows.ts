@@ -13,136 +13,138 @@ import { type WorkflowNode, type WorkflowEdge } from '@/types/workflow.types';
 export const productListingWorkflow = {
     name: 'Product Listing Generator',
     nodes: [
-        // ========== INPUT LAYER (Left) ==========
-        // Product Images
+        // ========== INPUT LAYER (Left Column) ==========
+        // System Prompt - Top left
+        {
+            id: 'system-prompt',
+            type: 'text',
+            position: { x: 50, y: 20 },
+            data: {
+                text: 'You are a professional e-commerce copywriter and product analyst. Analyze product images and specs to create compelling, SEO-optimized content that drives conversions.',
+            },
+        },
+        // Product Specs - Below system prompt
+        {
+            id: 'product-specs',
+            type: 'text',
+            position: { x: 50, y: 220 },
+            data: {
+                text: 'Product Name: Mini Projector\n\nKey Features:\n- 1080p Full HD\n- WiFi & Bluetooth\n- Portable design\n\nDimensions: 5.9 x 4.3 x 2.1 inches\nPrice: $89.99',
+            },
+        },
+        // Product Images - Spread vertically on left
         {
             id: 'img-1',
             type: 'image',
-            position: { x: 50, y: 50 },
+            position: { x: 50, y: 420 },
             data: { images: [], currentIndex: 0, viewMode: 'single' },
         },
         {
             id: 'img-2',
             type: 'image',
-            position: { x: 50, y: 280 },
+            position: { x: 50, y: 700 },
             data: { images: [], currentIndex: 0, viewMode: 'single' },
         },
         {
             id: 'img-3',
             type: 'image',
-            position: { x: 50, y: 510 },
+            position: { x: 50, y: 980 },
             data: { images: [], currentIndex: 0, viewMode: 'single' },
         },
-        // System Prompt
-        {
-            id: 'system-prompt',
-            type: 'text',
-            position: { x: 50, y: 740 },
-            data: {
-                text: 'You are a professional e-commerce copywriter and product analyst. Analyze product images and specs to create compelling, SEO-optimized content that drives conversions.',
-            },
-        },
-        // Product Specs
-        {
-            id: 'product-specs',
-            type: 'text',
-            position: { x: 50, y: 970 },
-            data: {
-                text: 'Product Name: Mini Projector\n\nKey Features:\n- 1080p Full HD\n- WiFi & Bluetooth\n- Portable design\n\nDimensions: 5.9 x 4.3 x 2.1 inches\nPrice: $89.99',
-            },
-        },
 
-        // ========== ANALYZE LAYER (Middle) ==========
-        // Analyze Product LLM - receives images + system prompt + product specs
+        // ========== ANALYZE LAYER (Center-Left) ==========
+        // Analyze Product LLM
         {
             id: 'llm-analyze',
             type: 'llm',
-            position: { x: 400, y: 280 },
+            position: { x: 600, y: 420 },
             data: {
                 model: 'gemini-2.5-flash',
             },
         },
 
-        // ========== CONTENT GENERATION LAYER ==========
-        // Amazon prompt
+        // ========== CONTENT GENERATION PROMPTS (Center) ==========
+        // Amazon prompt - Top row
         {
             id: 'prompt-amazon',
             type: 'text',
-            position: { x: 750, y: 50 },
+            position: { x: 600, y: 20 },
             data: {
                 text: 'Based on the product analysis, write a compelling Amazon product listing with:\n- Attention-grabbing title (under 200 chars)\n- 5 bullet points highlighting key benefits\n- Detailed product description\n- Keywords for search optimization',
             },
         },
+        // Instagram prompt - Middle row
+        {
+            id: 'prompt-instagram',
+            type: 'text',
+            position: { x: 600, y: 700 },
+            data: {
+                text: 'Create an engaging Instagram caption for this product that:\n- Hooks attention in the first line\n- Highlights 3 key benefits\n- Includes relevant emojis\n- Ends with a call-to-action\n- Suggests 10 relevant hashtags',
+            },
+        },
+        // SEO prompt - Bottom row
+        {
+            id: 'prompt-seo',
+            type: 'text',
+            position: { x: 600, y: 1000 },
+            data: {
+                text: 'Write an SEO meta description (under 160 chars) that:\n- Includes primary keywords naturally\n- Has a compelling value proposition\n- Encourages click-through\nAlso provide a suggested meta title (under 60 chars).',
+            },
+        },
+
+        // ========== DOWNSTREAM LLMs (Center-Right) ==========
         // Amazon LLM
         {
             id: 'llm-amazon',
             type: 'llm',
-            position: { x: 1100, y: 50 },
+            position: { x: 1200, y: 80 },
             data: {
                 model: 'gemini-2.5-flash',
-            },
-        },
-        // Amazon Result (Output Text Node)
-        {
-            id: 'result-amazon',
-            type: 'text',
-            position: { x: 1450, y: 50 },
-            data: {
-                text: '(Amazon listing will appear here after running)',
-            },
-        },
-
-        // Instagram prompt
-        {
-            id: 'prompt-instagram',
-            type: 'text',
-            position: { x: 750, y: 350 },
-            data: {
-                text: 'Create an engaging Instagram caption for this product that:\n- Hooks attention in the first line\n- Highlights 3 key benefits\n- Includes relevant emojis\n- Ends with a call-to-action\n- Suggests 10 relevant hashtags',
             },
         },
         // Instagram LLM
         {
             id: 'llm-instagram',
             type: 'llm',
-            position: { x: 1100, y: 350 },
+            position: { x: 1200, y: 450 },
             data: {
                 model: 'gemini-2.5-flash',
-            },
-        },
-        // Instagram Result (Output Text Node)
-        {
-            id: 'result-instagram',
-            type: 'text',
-            position: { x: 1450, y: 350 },
-            data: {
-                text: '(Instagram caption will appear here after running)',
-            },
-        },
-
-        // SEO prompt
-        {
-            id: 'prompt-seo',
-            type: 'text',
-            position: { x: 750, y: 650 },
-            data: {
-                text: 'Write an SEO meta description (under 160 chars) that:\n- Includes primary keywords naturally\n- Has a compelling value proposition\n- Encourages click-through\nAlso provide a suggested meta title (under 60 chars).',
             },
         },
         // SEO LLM
         {
             id: 'llm-seo',
             type: 'llm',
-            position: { x: 1100, y: 650 },
+            position: { x: 1200, y: 820 },
             data: {
                 model: 'gemini-2.5-flash',
             },
         },
-        // SEO Result (Output Text Node)
+
+        // ========== OUTPUT LAYER (Right) ==========
+        // Amazon Result
+        {
+            id: 'result-amazon',
+            type: 'text',
+            position: { x: 1700, y: 80 },
+            data: {
+                text: '(Amazon listing will appear here after running)',
+            },
+        },
+        // Instagram Result
+        {
+            id: 'result-instagram',
+            type: 'text',
+            position: { x: 1700, y: 450 },
+            data: {
+                text: '(Instagram caption will appear here after running)',
+            },
+        },
+        // SEO Result
         {
             id: 'result-seo',
             type: 'text',
-            position: { x: 1450, y: 650 },
+            position: { x: 1700, y: 820 },
             data: {
                 text: '(SEO meta will appear here after running)',
             },
@@ -157,7 +159,7 @@ export const productListingWorkflow = {
             sourceHandle: 'output',
             target: 'llm-analyze',
             targetHandle: 'images',
-            animated: true,
+            type: 'custom',
             style: { stroke: '#8B5CF6', strokeWidth: 2 },
         },
         {
@@ -166,7 +168,7 @@ export const productListingWorkflow = {
             sourceHandle: 'output',
             target: 'llm-analyze',
             targetHandle: 'images',
-            animated: true,
+            type: 'custom',
             style: { stroke: '#8B5CF6', strokeWidth: 2 },
         },
         {
@@ -175,7 +177,7 @@ export const productListingWorkflow = {
             sourceHandle: 'output',
             target: 'llm-analyze',
             targetHandle: 'images',
-            animated: true,
+            type: 'custom',
             style: { stroke: '#8B5CF6', strokeWidth: 2 },
         },
         // System prompt to Analyze LLM
@@ -185,7 +187,7 @@ export const productListingWorkflow = {
             sourceHandle: 'output',
             target: 'llm-analyze',
             targetHandle: 'system_prompt',
-            animated: true,
+            type: 'custom',
             style: { stroke: '#8B5CF6', strokeWidth: 2 },
         },
         // Product specs to Analyze LLM
@@ -195,7 +197,7 @@ export const productListingWorkflow = {
             sourceHandle: 'output',
             target: 'llm-analyze',
             targetHandle: 'user_message',
-            animated: true,
+            type: 'custom',
             style: { stroke: '#8B5CF6', strokeWidth: 2 },
         },
 
@@ -207,7 +209,7 @@ export const productListingWorkflow = {
             sourceHandle: 'output',
             target: 'llm-amazon',
             targetHandle: 'system_prompt',
-            animated: true,
+            type: 'custom',
             style: { stroke: '#8B5CF6', strokeWidth: 2 },
         },
         // Analyze output → Instagram LLM (as system context)
@@ -217,7 +219,7 @@ export const productListingWorkflow = {
             sourceHandle: 'output',
             target: 'llm-instagram',
             targetHandle: 'system_prompt',
-            animated: true,
+            type: 'custom',
             style: { stroke: '#8B5CF6', strokeWidth: 2 },
         },
         // Analyze output → SEO LLM (as system context)
@@ -227,7 +229,7 @@ export const productListingWorkflow = {
             sourceHandle: 'output',
             target: 'llm-seo',
             targetHandle: 'system_prompt',
-            animated: true,
+            type: 'custom',
             style: { stroke: '#8B5CF6', strokeWidth: 2 },
         },
 
@@ -239,7 +241,7 @@ export const productListingWorkflow = {
             sourceHandle: 'output',
             target: 'llm-amazon',
             targetHandle: 'user_message',
-            animated: true,
+            type: 'custom',
             style: { stroke: '#8B5CF6', strokeWidth: 2 },
         },
         // Instagram prompt to Instagram LLM
@@ -249,7 +251,7 @@ export const productListingWorkflow = {
             sourceHandle: 'output',
             target: 'llm-instagram',
             targetHandle: 'user_message',
-            animated: true,
+            type: 'custom',
             style: { stroke: '#8B5CF6', strokeWidth: 2 },
         },
         // SEO prompt to SEO LLM
@@ -259,7 +261,7 @@ export const productListingWorkflow = {
             sourceHandle: 'output',
             target: 'llm-seo',
             targetHandle: 'user_message',
-            animated: true,
+            type: 'custom',
             style: { stroke: '#8B5CF6', strokeWidth: 2 },
         },
 
@@ -271,7 +273,7 @@ export const productListingWorkflow = {
             sourceHandle: 'output',
             target: 'result-amazon',
             targetHandle: 'input',
-            animated: true,
+            type: 'custom',
             style: { stroke: '#8B5CF6', strokeWidth: 2 },
         },
         // Instagram LLM output → Instagram Result Text
@@ -281,7 +283,7 @@ export const productListingWorkflow = {
             sourceHandle: 'output',
             target: 'result-instagram',
             targetHandle: 'input',
-            animated: true,
+            type: 'custom',
             style: { stroke: '#8B5CF6', strokeWidth: 2 },
         },
         // SEO LLM output → SEO Result Text
@@ -291,7 +293,7 @@ export const productListingWorkflow = {
             sourceHandle: 'output',
             target: 'result-seo',
             targetHandle: 'input',
-            animated: true,
+            type: 'custom',
             style: { stroke: '#8B5CF6', strokeWidth: 2 },
         },
     ] as WorkflowEdge[],
@@ -322,9 +324,17 @@ export const simpleTestWorkflow = {
         {
             id: 'llm-1',
             type: 'llm',
-            position: { x: 450, y: 150 },
+            position: { x: 550, y: 150 },
             data: {
                 model: 'gemini-2.5-flash',
+            },
+        },
+        {
+            id: 'text-3',
+            type: 'text',
+            position: { x: 1000, y: 150 },
+            data: {
+                text: '(LLM response will appear here after running)',
             },
         },
     ] as WorkflowNode[],
@@ -335,7 +345,7 @@ export const simpleTestWorkflow = {
             sourceHandle: 'output',
             target: 'llm-1',
             targetHandle: 'system_prompt',
-            animated: true,
+            type: 'custom',
             style: { stroke: '#8B5CF6', strokeWidth: 2 },
         },
         {
@@ -344,7 +354,16 @@ export const simpleTestWorkflow = {
             sourceHandle: 'output',
             target: 'llm-1',
             targetHandle: 'user_message',
-            animated: true,
+            type: 'custom',
+            style: { stroke: '#8B5CF6', strokeWidth: 2 },
+        },
+        {
+            id: 'e-llm-result',
+            source: 'llm-1',
+            sourceHandle: 'output',
+            target: 'text-3',
+            targetHandle: 'input',
+            type: 'custom',
             style: { stroke: '#8B5CF6', strokeWidth: 2 },
         },
     ] as WorkflowEdge[],

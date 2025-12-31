@@ -27,11 +27,14 @@ import {
 export function TextNode({ id, data, selected }: NodeProps<TextFlowNode>) {
   const updateNodeData = useWorkflowStore((s: WorkflowState) => s.updateNodeData);
 
+  // Defensive check for undefined data
+  const safeData = data || { label: 'Text', text: '', isLocked: false };
+  
   const [renameDialogOpen, setRenameDialogOpen] = React.useState(false);
-  const [newLabel, setNewLabel] = React.useState(data.label || 'Text');
+  const [newLabel, setNewLabel] = React.useState(safeData.label || 'Text');
 
-  const displayLabel = data.label || 'Text';
-  const isLocked = data.isLocked || false;
+  const displayLabel = safeData.label || 'Text';
+  const isLocked = safeData.isLocked || false;
 
   const handleRename = () => {
     if (newLabel.trim()) {
@@ -92,7 +95,7 @@ export function TextNode({ id, data, selected }: NodeProps<TextFlowNode>) {
         }
       >
         <textarea
-          value={data.text || ''}
+          value={safeData.text || ''}
           onChange={(e) => updateNodeData<TextFlowNode>(id, { text: e.target.value })}
           placeholder="Enter your text here..."
           className={cn(
