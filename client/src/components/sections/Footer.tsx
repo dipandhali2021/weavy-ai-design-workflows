@@ -3,14 +3,31 @@
 import Link from 'next/link';
 import { useEffect, useRef } from 'react';
 import { BsInstagram, BsLinkedin, BsTwitter, BsDiscord, BsYoutube } from 'react-icons/bs';
-import { GoPlus } from "react-icons/go";
+import { GoPlus } from 'react-icons/go';
+import { FOOTER_LINKS, SOCIAL_LINKS, FOOTER_ASSETS } from './data';
+import type { SocialLink } from './types';
 
 /**
- * Footer component for Weavy.
- * Features a sage-colored background, large "Artificial Intelligence + Human Creativity" text,
- * node-based decorative elements, and a persistent giant "Start Now" button.
+ * Icon component mapping for social links
  */
+const SocialIcons: Record<SocialLink['icon'], React.ComponentType> = {
+  linkedin: BsLinkedin,
+  instagram: BsInstagram,
+  twitter: BsTwitter,
+  discord: BsDiscord,
+  youtube: BsYoutube,
+};
 
+/**
+ * Footer Component
+ * 
+ * The main site footer featuring:
+ * - "Artificial Intelligence + Human Creativity" hero statement
+ * - Navigation link columns
+ * - Social media links
+ * - SOC 2 certification badge
+ * - Large "Start Now" CTA button
+ */
 const Footer = () => {
   const footerRef = useRef<HTMLElement>(null);
 
@@ -20,7 +37,6 @@ const Footer = () => {
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        // Dispatch custom event when footer visibility changes
         window.dispatchEvent(
           new CustomEvent('footer-visibility', {
             detail: { isVisible: entry.isIntersecting },
@@ -34,63 +50,19 @@ const Footer = () => {
     return () => observer.disconnect();
   }, []);
 
-  const footerLinks = [
-    {
-      title: 'Get Started',
-      links: [
-        { label: 'REQUEST A DEMO', href: '#' },
-        { label: 'PRICING', href: '/pricing' },
-        { label: 'ENTERPRISE', href: '/enterprise' },
-      ],
-    },
-    {
-      title: 'Company',
-      links: [
-        { label: 'ABOUT', href: '/about-us' },
-        { label: 'CAREERS', href: '#' },
-        { label: 'TRUST', href: '#' },
-        { label: 'TERMS', href: '#' },
-        { label: 'PRIVACY', href: '#' },
-      ],
-    },
-    {
-      title: 'Connect',
-      links: [{ label: 'COLLECTIVE', href: '/collective' }],
-    },
-    {
-      title: 'Resources',
-      links: [{ label: 'KNOWLEDGE CENTER', href: '#' }],
-    },
-  ];
-
   return (
     <footer ref={footerRef} className="relative bg-[#252525] overflow-hidden">
       {/* Curved Sage Container */}
       <div className="relative bg-[#A8B1A5] max-w-[1440px] rounded-tr-[60px] mt-16 md:mt-24 mr-16 pt-16 md:pt-24 pb-12 px-[5%]">
-      
         <div className="max-w-[1440px] mx-auto relative z-10">
-          {/* Hero Statement - AI + Human Creativity */}
-          <div className="flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-0 mb-20 md:mb-32">
-            <h2 className="text-white text-[clamp(2.5rem,7vw,5.5rem)] font-medium leading-[0.95] tracking-[-0.03em]">
-              Artificial<br />Intelligence
-            </h2>
-            <span className="flex items-center justify-center text-white px-4 md:px-8 group cursor-pointer">
-              <GoPlus 
-                size={100} 
-                className="transition-all duration-300 ease-out group-hover:rotate-45 group-hover:text-[#f7ff9e]"
-              />
-            </span>
-            <h2 className="text-white text-[clamp(2.5rem,7vw,5.5rem)] font-medium leading-[0.95] tracking-[-0.03em]">
-              Human<br />Creativity
-            </h2>
-          </div>
+          {/* Hero Statement */}
+          <HeroStatement />
 
-          {/* Logo and Description Row */}
+          {/* Logo and Description */}
           <div className="flex flex-col lg:flex-row gap-8 lg:gap-16 mb-12">
-            {/* Logo Section */}
             <div className="flex max-w-[80%] gap-10">
               <img
-                src="https://cdn.prod.website-files.com/681b040781d5b5e278a69989/68222dc898cffdbd87733f23_footer-logo%2Btagline%20DESKTOP.svg"
+                src={FOOTER_ASSETS.logo}
                 alt="Weavy Artistic Intelligence"
                 className="h-[40px] w-auto mb-6"
                 decoding="async"
@@ -101,11 +73,11 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* Links Row */}
+          {/* Links and Social Row */}
           <div className="flex flex-col lg:flex-row justify-start gap-8 mb-12">
             {/* Link Columns */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-10">
-              {footerLinks.map((column) => (
+              {FOOTER_LINKS.map((column) => (
                 <div key={column.title} className="flex flex-col">
                   <span className="text-white/60 text-[11px] uppercase tracking-[0.1em] mb-3 font-medium">
                     {column.title}
@@ -127,28 +99,27 @@ const Footer = () => {
 
             {/* Social Icons */}
             <div className="flex gap-5 items-start">
-              <a href="https://www.linkedin.com/company/weavy-ai" target="_blank" rel="noopener noreferrer" className="text-white hover:opacity-70 transition-opacity text-lg">
-                <BsLinkedin/>
-              </a>
-              <a href="https://www.instagram.com/weavy_ai/" target="_blank" rel="noopener noreferrer" className="text-white hover:opacity-70 transition-opacity text-lg">
-                <BsInstagram/>
-              </a>
-              <a href="https://x.com/Weavy_ai" target="_blank" rel="noopener noreferrer" className="text-white hover:opacity-70 transition-opacity text-lg">
-                <BsTwitter/>
-              </a>
-              <a href="https://discord.gg/jB6vn2ewxW" target="_blank" rel="noopener noreferrer" className="text-white hover:opacity-70 transition-opacity text-lg">
-                <BsDiscord/>
-              </a>
-              <a href="https://www.youtube.com/@Weavy-ai" target="_blank" rel="noopener noreferrer" className="text-white hover:opacity-70 transition-opacity text-lg">
-                <BsYoutube/>
-              </a>
+              {SOCIAL_LINKS.map((social) => {
+                const Icon = SocialIcons[social.icon];
+                return (
+                  <a
+                    key={social.platform}
+                    href={social.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-white hover:opacity-70 transition-opacity text-lg"
+                  >
+                    <Icon />
+                  </a>
+                );
+              })}
             </div>
           </div>
 
           {/* SOC 2 Badge */}
           <div className="flex items-center gap-4 mb-2">
             <img
-              src="https://cdn.prod.website-files.com/681b040781d5b5e278a69989/69398e51b66cfd37e959fee4_image-SOC2_weavy.avif"
+              src={FOOTER_ASSETS.soc2Badge}
               alt="SOC2"
               className="w-[50px] h-[50px] object-contain"
               loading="lazy"
@@ -172,7 +143,7 @@ const Footer = () => {
         </div>
       </div>
 
-      {/* Global "Start Now" Fixed-Style Button - Outside the sage container */}
+      {/* Start Now Button */}
       <Link
         href="/signin"
         className="bg-[#f7ff9e] text-black absolute bottom-0 right-0 pb-10 pt-2 px-8 ml-16 pr-10 flex items-center justify-center rounded-tl-[40px] transition-transform hover:scale-[1.02] active:scale-95 z-20"
@@ -184,5 +155,25 @@ const Footer = () => {
     </footer>
   );
 };
+
+/**
+ * Hero statement sub-component with AI + Human Creativity text
+ */
+const HeroStatement = () => (
+  <div className="flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-0 mb-20 md:mb-32">
+    <h2 className="text-white text-[clamp(2.5rem,7vw,5.5rem)] font-medium leading-[0.95] tracking-[-0.03em]">
+      Artificial<br />Intelligence
+    </h2>
+    <span className="flex items-center justify-center text-white px-4 md:px-8 group cursor-pointer">
+      <GoPlus
+        size={100}
+        className="transition-all duration-300 ease-out group-hover:rotate-45 group-hover:text-[#f7ff9e]"
+      />
+    </span>
+    <h2 className="text-white text-[clamp(2.5rem,7vw,5.5rem)] font-medium leading-[0.95] tracking-[-0.03em]">
+      Human<br />Creativity
+    </h2>
+  </div>
+);
 
 export default Footer;

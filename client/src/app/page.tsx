@@ -1,4 +1,4 @@
-import AIModelsSection from '@/components/sections/ai-models';
+import AIModelsSection from '@/components/sections/AIModels';
 import ControlTheOutcome from '@/components/sections/ControlTheOutcome';
 import Footer from '@/components/sections/Footer';
 import Hero from '@/components/sections/Hero';

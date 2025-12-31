@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { FcGoogle } from 'react-icons/fc';
 import { getStoredToken } from '@/lib/auth';
+import Link from 'next/link';
 
 declare global {
   interface Window {
@@ -91,13 +92,14 @@ export default function SignInPage() {
         backgroundRepeat: 'no-repeat, no-repeat, no-repeat, repeat, repeat',
       }}
     >
-      <div className="absolute left-0 top-0 z-10">
+      <Link href={"/"} className="absolute left-0 top-0 z-10">
         <img
           src="https://slelguoygbfzlpylpxfs.supabase.co/storage/v1/object/public/test-clones/2f5fd82e-0e64-4bc1-b8bd-486911a2d083-weavy-ai/assets/svgs/682350d42a7c97b440a58480_Nav_20left_20item_20-_20D-1.svg"
           alt="Logo"
           className="h-10 w-auto invert"
+          
         />
-      </div>
+      </Link>
 
       <div className="w-[350px] overflow-hidden rounded-lg border border-white bg-white">
         <div className="flex h-[280px] w-full items-center justify-center overflow-hidden bg-linear-to-b from-[#5d8190] to-[#7a9999]">
