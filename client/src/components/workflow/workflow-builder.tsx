@@ -16,9 +16,11 @@ import '@xyflow/react/dist/style.css';
 import { useWorkflowStore } from '@/stores/workflowStore';
 import { simpleTestWorkflow, productListingWorkflow } from '@/components/workflow/data/sampleWorkflows';
 import type { WorkflowNode, WorkflowEdge } from '@/types/workflow.types';
+import { isValidConnection as checkIsValidConnection } from '@/lib/connectionValidation';
 
 import { workflowNodeTypes } from './nodes';
 import { customEdgeTypes } from './custom-edges';
+import { CustomConnectionLine, connectionLineStyles } from './custom-connection-line';
 import { BottomToolbar, LeftPanel, RightPanel } from './primitives';
 import { Spinner } from '@/components/ui/spinner';
 
@@ -184,6 +186,9 @@ function BuilderInner() {
 
   return (
     <div className="relative h-dvh w-screen overflow-hidden bg-background">
+      {/* Animation styles for connection line */}
+      <style dangerouslySetInnerHTML={{ __html: connectionLineStyles }} />
+
       {/* Canvas */}
       <div ref={reactFlowWrapper} className="absolute inset-0">
         <ReactFlow
@@ -195,6 +200,11 @@ function BuilderInner() {
           onDrop={onDrop}
           onDragOver={onDragOver}
           nodeTypes={workflowNodeTypes as NodeTypes}
+          isValidConnection={React.useCallback(
+            (connection) => checkIsValidConnection(connection, nodes, edges),
+            [nodes, edges]
+          )}
+          connectionLineComponent={CustomConnectionLine}
           fitView={false}
           panOnScroll
           zoomOnScroll
@@ -210,7 +220,6 @@ function BuilderInner() {
             type: 'custom',
             style: { stroke: '#D946EF', strokeWidth: 2 },
           }}
-          connectionLineStyle={{ stroke: '#D946EF', strokeWidth: 2 }}
         >
           {/* Right Panel (Credits, Save, Tasks) */}
           <RightPanel
