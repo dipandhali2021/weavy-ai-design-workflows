@@ -4,9 +4,6 @@ import type { WorkflowStateData } from './types';
 // Selectors
 // ============================================================================
 
-// Selectors use WorkflowStateData since they only access data properties,
-// not the action methods from slices. This makes them compatible with
-// any state type that extends WorkflowStateData.
 
 export const selectNodes = (state: WorkflowStateData) => state.nodes;
 export const selectEdges = (state: WorkflowStateData) => state.edges;

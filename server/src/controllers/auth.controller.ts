@@ -1,13 +1,8 @@
 import { Response } from 'express';
-import { OAuth2Client } from 'google-auth-library';
 import User from '../models/User.js';
 import { generateToken, AuthRequest } from '../middleware/auth.js';
-import { googleAuthSchema } from '../schemas/auth.js';
 import { sendSuccess, sendError, HttpStatus, COOKIE_CONFIG } from '../utils/index.js';
 import { UserResponse } from '../types/index.js';
-
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID!;
-const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 
 /**
  * Format user data for API response
@@ -28,68 +23,6 @@ const setAuthCookie = (res: Response, token: string): void => {
         secure: COOKIE_CONFIG.SECURE,
         sameSite: COOKIE_CONFIG.SAME_SITE,
         maxAge: COOKIE_CONFIG.MAX_AGE,
-    });
-};
-
-/**
- * POST /auth/google - Handle Google OAuth token from frontend
- */
-export const googleAuth = async (req: AuthRequest, res: Response): Promise<void> => {
-    // Validate request body
-    const validation = googleAuthSchema.safeParse(req.body);
-
-    if (!validation.success) {
-        sendError(res, 'Invalid request', HttpStatus.BAD_REQUEST, validation.error.errors);
-        return;
-    }
-
-    const { credential } = validation.data;
-
-    // Verify the Google token
-    const ticket = await googleClient.verifyIdToken({
-        idToken: credential,
-        audience: GOOGLE_CLIENT_ID,
-    });
-
-    const payload = ticket.getPayload();
-
-    if (!payload || !payload.email) {
-        sendError(res, 'Invalid Google token', HttpStatus.BAD_REQUEST);
-        return;
-    }
-
-    const { sub: googleId, email, name, picture } = payload;
-
-    // Find or create user
-    let user = await User.findOne({ googleId });
-
-    if (!user) {
-        user = await User.create({
-            googleId,
-            email,
-            name: name || email.split('@')[0],
-            avatar: picture || '',
-        });
-        console.log('✅ New user created:', user.email);
-    } else {
-        // Update user info if changed
-        user.name = name || user.name;
-        user.avatar = picture || user.avatar;
-        await user.save();
-    }
-
-    // Generate JWT token
-    const token = generateToken({
-        userId: user._id.toString(),
-        email: user.email,
-    });
-
-    // Set HTTP-only cookie
-    setAuthCookie(res, token);
-
-    sendSuccess(res, {
-        user: formatUserResponse(user),
-        token,
     });
 };
 

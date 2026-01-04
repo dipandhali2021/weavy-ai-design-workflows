@@ -65,6 +65,13 @@ class ApiClient {
   }
 
   /**
+   * Get the Google OAuth redirect URL
+   */
+  getGoogleAuthUrl(): string {
+    return `${this.baseUrl}/auth/google`;
+  }
+
+  /**
    * Make an authenticated request to the API
    * @param endpoint - API endpoint path
    * @param options - Fetch options

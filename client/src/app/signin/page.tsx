@@ -3,40 +3,8 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { FcGoogle } from 'react-icons/fc';
-import { getStoredToken } from '@/lib/auth';
 import Link from 'next/link';
-
-declare global {
-  interface Window {
-    google?: {
-      accounts: {
-        id: {
-          initialize: (config: {
-            client_id: string;
-            callback: (response: { credential: string }) => void;
-            auto_select?: boolean;
-          }) => void;
-          renderButton: (
-            element: HTMLElement | null,
-            config: {
-              theme?: 'outline' | 'filled_blue' | 'filled_black';
-              size?: 'large' | 'medium' | 'small';
-              type?: 'standard' | 'icon';
-              text?: 'signin_with' | 'signup_with' | 'continue_with' | 'signin';
-              shape?: 'rectangular' | 'pill' | 'circle' | 'square';
-              logo_alignment?: 'left' | 'center';
-              width?: number;
-            }
-          ) => void;
-          prompt: () => void;
-        };
-      };
-    };
-  }
-}
-
-const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '737286057515-0m14h8fsn0g8fglab18sbgqt7uqueasc.apps.googleusercontent.com';
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000';
+import api from '@/lib/api';
 
 export default function SignInPage() {
   const router = useRouter();
@@ -45,23 +13,12 @@ export default function SignInPage() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        // Check for token using the correct auth utility
-        const token = getStoredToken();
-        
-        if (token) {
-          // Verify the token is valid by calling the session endpoint
-          const response = await fetch(`${API_BASE_URL}/auth/session`, {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-            },
-            credentials: 'include',
-          });
+        // Check if user has a valid session using the API client
+        const response = await api.getSession();
 
-          if (response.ok) {
-            // User is authenticated, redirect to dashboard
-            router.push('/dashboard');
-            return;
-          }
+        if (response.success) {
+          // User is authenticated, redirect to dashboard
+          router.push('/dashboard');
         }
       } catch (error) {
         console.error('Auth check failed:', error);
@@ -73,7 +30,7 @@ export default function SignInPage() {
 
   // Redirect to backend OAuth flow
   const handleGoogleSignIn = () => {
-    window.location.href = `${API_BASE_URL}/auth/google`;
+    window.location.href = api.getGoogleAuthUrl();
   };
 
   return (

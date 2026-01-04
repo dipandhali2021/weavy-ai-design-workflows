@@ -8,9 +8,6 @@ const router = Router();
 
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000';
 
-// POST /auth/google - Handle Google OAuth token from frontend
-router.post('/google', asyncHandler(authController.googleAuth));
-
 // GET /auth/google - Initiate Google OAuth flow (redirect-based)
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
 

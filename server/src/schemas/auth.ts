@@ -1,12 +1,5 @@
 import { z } from 'zod';
 
-// Google OAuth token schema
-export const googleAuthSchema = z.object({
-    credential: z.string().min(1, 'Google credential is required'),
-});
-
-export type GoogleAuthInput = z.infer<typeof googleAuthSchema>;
-
 // User response schema
 export const userResponseSchema = z.object({
     id: z.string(),
